@@ -219,7 +219,10 @@
 
         window.addEventListener("keydown", (event) => {
           let val = Number(voicesNumbox.value);
-          if (event.key == " ") playButton.click();
+          if (event.key == " ") {
+            event.preventDefault();
+            playButton.click();
+          }
           if (event.key == "Shift") drawCheckbox.checked = true;
           if (event.key == "e") voicesNumbox.value = val + 1;
           else if (event.key == "q")
