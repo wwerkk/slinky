@@ -127,7 +127,7 @@
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          if (!drawCheckbox.checked) resetPlayback(event.offsetX);
+          if (!drawCheckbox.checked) resetPlayback(event.x);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
@@ -136,22 +136,18 @@
         });
 
         waveformCanvas.addEventListener("mousemove", (event) => {
-          if (isMouseDown) {
-            if (drawCheckbox.checked) continueDrawing(event);
-            else resetPlayback(event.offsetX);
-          }
+          if (isMouseDown && drawCheckbox.checked) {
+            continueDrawing(event);
+          } else if (isMouseDown) resetPlayback(event.x);
         });
 
         window.addEventListener("mouseup", () => {
-          if (isMouseDown) {
-            if (drawCheckbox.checked) {
-              stopDrawing();
-            }
-            isMouseDown = false;
-          }
+          if (isMouseDown && drawCheckbox.checked) {
+            stopDrawing();
+          } else if (isMouseDown) isMouseDown = false;
         });
 
-        function resetPlayback(clickPositionX) {
+        function resetPlayback(x) {
           if (!audioBuffer) return;
           if (audioContext && !polyCheckbox.checked) {
             audioContext.close();
@@ -160,36 +156,51 @@
           source = audioContext.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
+          if (x < 0) x = 0;
           currentTime =
-            (clickPositionX * audioBuffer.duration) / waveformCanvas.width;
+            (x * audioBuffer.duration) / waveformCanvas.width;
           source.loop = loopCheckbox.checked;
           source.start(0, currentTime);
           cancelAnimationFrame(animationId);
           drawPlayhead();
         }
 
+        function pixToSamp(x, rect, canvasWidth) {
+          x -= rect.left;
+          const samplesPerPixel = audioBuffer.length / canvasWidth;
+          return Math.floor(x * samplesPerPixel);
+        }
+
         function startDrawing(event) {
           // Initialize drawing process here
           if (!audioBuffer) return;
-
           // Assuming mono for simplicity
           const channelData = audioBuffer.getChannelData(0);
           const rect = waveformCanvas.getBoundingClientRect();
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
-
-          // Convert click position to sample index
-          const clickX = event.clientX - rect.left; // Mouse x coordinate relative to canvas
-          const samplesPerPixel = audioBuffer.length / canvasWidth;
-          const sampleIndex = Math.floor(clickX * samplesPerPixel);
+          const sampleIndex = pixToSamp(event.x, rect, canvasWidth)
+          if (sampleIndex < 0) sampleIndex = 0
+          else if (sampleIndex >= audioBuffer.length) sampleIndex = audioBuffer.length - 1;
 
           // Placeholder: Display sample index and value for debugging
-          console.log("drawing");
           console.log(`Start drawing at sample ${sampleIndex}`);
         }
 
         function continueDrawing(event) {
-          // Continue drawing or modifying the waveform here
+          // Initialize drawing process here
+          if (!audioBuffer) return;
+          // Assuming mono for simplicity
+          const channelData = audioBuffer.getChannelData(0);
+          const rect = waveformCanvas.getBoundingClientRect();
+          const canvasWidth = waveformCanvas.width;
+          const canvasHeight = waveformCanvas.height;
+          var sampleIndex = pixToSamp(event.x, rect, canvasWidth)
+          if (sampleIndex < 0) sampleIndex = 0
+          else if (sampleIndex >= audioBuffer.length) sampleIndex = audioBuffer.length - 1;
+
+          // Placeholder: Display sample index and value for debugging
+          console.log(`Drawing at sample ${sampleIndex}`);
         }
 
         function stopDrawing() {
