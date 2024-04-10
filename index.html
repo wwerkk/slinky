@@ -51,7 +51,7 @@
         let isDrawing = false;
         let lastDrawnSampleIndex = null;
 
-        const bufferLength = audioContext.sampleRate * 1; // for 1 second of audio
+        const bufferLength = audioContext.sampleRate * 0.1; // for 1 second of audio
         audioBuffer = audioContext.createBuffer(
           2,
           bufferLength,
@@ -192,7 +192,7 @@
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.x);
+          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.offsetX);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
@@ -206,7 +206,7 @@
         waveformCanvas.addEventListener("mousemove", (event) => {
           if (isDrawing) {
             drawOnWaveform(event);
-          } else if (isMouseDown) resetPlayback(event.x);
+          } else if (isMouseDown) resetPlayback(event.offsetX);
         });
 
         window.addEventListener("mouseup", () => {
@@ -219,6 +219,8 @@
 
         window.addEventListener("keydown", (event) => {
           let val = Number(voicesNumbox.value);
+          if (event.key == " ") playButton.click();
+          if (event.key == "Shift") drawCheckbox.checked = true;
           if (event.key == "e") voicesNumbox.value = val + 1;
           else if (event.key == "q")
             voicesNumbox.value = val > 1 ? val - 1 : val;
@@ -226,6 +228,10 @@
             sources[0].source.stop();
             sources = sources.slice(1);
           }
+        });
+
+        window.addEventListener("keyup", (event) => {
+          if (event.key == "Shift") drawCheckbox.checked = false;
         });
 
         function pixToSamp(x, rect, canvasWidth) {
@@ -240,14 +246,14 @@
           const y = event.clientY - rect.top;
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
-          const sampleIndex = pixToSamp(event.x, rect, canvasWidth);
+          const sampleIndex = pixToSamp(event.offsetX, rect, canvasWidth);
           if (sampleIndex === lastDrawnSampleIndex) return;
           lastDrawnSampleIndex = sampleIndex;
           const amplitude = -1 * (1 - (y / canvasHeight) * 2);
           // Assuming mono for simplicity. For stereo, you'd update both channels or a specific one.
           let channels = [];
-          channels.push(audioBuffer.getChannelData(0));
-          channels.push(audioBuffer.getChannelData(1));
+          for (var i = 0; i < audioBuffer.numberOfChannels; i++)
+            channels.push(audioBuffer.getChannelData(i));
           for (let channel of channels) {
             channel[sampleIndex] = amplitude;
           }
