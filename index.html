@@ -17,6 +17,8 @@
     <canvas id="waveform" width="800" height="100"></canvas>
     <br />
     <button id="playButton">Play</button>
+    <input id="loopCheckbox" name="loop" type="checkbox" />
+    <label for="loopCheckbox">Loop</label>
     <input id="polyCheckbox" name="poly" type="checkbox" />
     <label for="polyCheckbox">Poly</label>
     <input id="drawCheckbox" name="draw" type="checkbox" />
@@ -27,16 +29,23 @@
         const fileInput = document.getElementById("fileInput");
         const waveformCanvas = document.getElementById("waveform");
         const playButton = document.getElementById("playButton");
+        const loopCheckbox = document.getElementById("loopCheckbox");
         const polyCheckbox = document.getElementById("polyCheckbox");
         const drawCheckbox = document.getElementById("drawCheckbox");
         const ctx = waveformCanvas.getContext("2d");
-        let audioContext;
+        let audioContext = new AudioContext();
         let audioBuffer;
         let animationId;
         let currentTime = 0;
         let source = null;
-
         let isMouseDown = false;
+
+        const bufferLength = audioContext.sampleRate * 1; // for 1 second of audio
+        audioBuffer = audioContext.createBuffer(
+          2,
+          bufferLength,
+          audioContext.sampleRate
+        );
 
         fileInput.addEventListener("change", async (event) => {
           const file = event.target.files[0];
@@ -90,25 +99,35 @@
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
           currentTime = 0; // Reset current time
+          source.loop = loopCheckbox.checked;
+          console.log(source.loop);
           source.start(currentTime, 0); // Start from the beginning
           cancelAnimationFrame(animationId); // Stop previous animation frame
           drawPlayhead(); // Start drawing playhead from the beginning
         });
 
         const drawPlayhead = () => {
+          if (!audioContext || !source) return;
+
+          const loopCheckbox = document.getElementById("loopCheckbox");
+          let playbackTime = audioContext.currentTime + currentTime;
+          if (source.loop) {
+            playbackTime = playbackTime % audioBuffer.duration;
+          }
           const position =
-            ((audioContext.currentTime + currentTime) * waveformCanvas.width) /
-            audioBuffer.duration;
+            (playbackTime * waveformCanvas.width) / audioBuffer.duration;
+
           ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
           drawWaveform();
           ctx.fillStyle = "red";
           ctx.fillRect(position, 0, 1, waveformCanvas.height);
+
           animationId = requestAnimationFrame(drawPlayhead);
         };
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          resetPlayback(event.offsetX);
+          if (!drawCheckbox.checked) resetPlayback(event.offsetX);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
@@ -143,23 +162,37 @@
           source.connect(audioContext.destination);
           currentTime =
             (clickPositionX * audioBuffer.duration) / waveformCanvas.width;
+          source.loop = loopCheckbox.checked;
           source.start(0, currentTime);
           cancelAnimationFrame(animationId);
           drawPlayhead();
         }
 
         function startDrawing(event) {
-          console.log(event.offsetX, event.offsetY);
           // Initialize drawing process here
+          if (!audioBuffer) return;
+
+          // Assuming mono for simplicity
+          const channelData = audioBuffer.getChannelData(0);
+          const rect = waveformCanvas.getBoundingClientRect();
+          const canvasWidth = waveformCanvas.width;
+          const canvasHeight = waveformCanvas.height;
+
+          // Convert click position to sample index
+          const clickX = event.clientX - rect.left; // Mouse x coordinate relative to canvas
+          const samplesPerPixel = audioBuffer.length / canvasWidth;
+          const sampleIndex = Math.floor(clickX * samplesPerPixel);
+
+          // Placeholder: Display sample index and value for debugging
+          console.log("drawing");
+          console.log(`Start drawing at sample ${sampleIndex}`);
         }
 
         function continueDrawing(event) {
-          console.log(event.offsetX, event.offsetY);
           // Continue drawing or modifying the waveform here
         }
 
         function stopDrawing() {
-          console.log("Stop drawing");
           // Finalize drawing process here
         }
       };
