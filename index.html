@@ -192,7 +192,7 @@
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.offsetX);
+          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.clientX);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
@@ -206,7 +206,7 @@
         waveformCanvas.addEventListener("mousemove", (event) => {
           if (isDrawing) {
             drawOnWaveform(event);
-          } else if (isMouseDown) resetPlayback(event.offsetX);
+          } else if (isMouseDown) resetPlayback(event.clientX);
         });
 
         window.addEventListener("mouseup", () => {
@@ -237,10 +237,10 @@
           if (event.key == "Shift") drawCheckbox.checked = false;
         });
 
-        function pixToSamp(x, rect, canvasWidth) {
-          x -= rect.left;
-          const samplesPerPixel = audioBuffer.length / canvasWidth;
-          return Math.floor(x * samplesPerPixel);
+        function pixToSamp(x, canvasWidth) {
+          x /= canvasWidth;
+          x *= audioBuffer.length;
+          return Math.floor(x);
         }
 
         function drawOnWaveform(event) {
@@ -249,12 +249,11 @@
           const y = event.clientY - rect.top;
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
-          const sampleIndex = pixToSamp(event.offsetX, rect, canvasWidth);
+          const sampleIndex = pixToSamp(x, canvasWidth);
           if (sampleIndex === lastDrawnSampleIndex) return;
           lastDrawnSampleIndex = sampleIndex;
           const amplitude = -1 * (1 - (y / canvasHeight) * 2);
-          // Assuming mono for simplicity. For stereo, you'd update both channels or a specific one.
-          let channels = [];
+          let channels = []; // same for all chanenls for now
           for (var i = 0; i < audioBuffer.numberOfChannels; i++)
             channels.push(audioBuffer.getChannelData(i));
           for (let channel of channels) {
