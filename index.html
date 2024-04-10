@@ -51,7 +51,7 @@
         let isDrawing = false;
         let lastDrawnSampleIndex = null;
 
-        const bufferLength = audioContext.sampleRate * 0.1; // for 1 second of audio
+        const bufferLength = audioContext.sampleRate * 0.1; // for 100 ms of audio
         audioBuffer = audioContext.createBuffer(
           2,
           bufferLength,
@@ -182,7 +182,8 @@
               playbackTime = playbackTime % audioBuffer.duration;
             }
             const position =
-              (playbackTime * waveformCanvas.width) / audioBuffer.duration;
+              (playbackTime / audioBuffer.duration) * waveformCanvas.width;
+              console.log(position, waveformCanvas.width);
             ctx.fillStyle = src.color;
             ctx.fillRect(position, 0, 1, waveformCanvas.height);
           });
@@ -192,7 +193,7 @@
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.clientX);
+          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.offsetX);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
@@ -206,7 +207,7 @@
         waveformCanvas.addEventListener("mousemove", (event) => {
           if (isDrawing) {
             drawOnWaveform(event);
-          } else if (isMouseDown) resetPlayback(event.clientX);
+          } else if (isMouseDown) resetPlayback(event.offsetX);
         });
 
         window.addEventListener("mouseup", () => {
@@ -245,8 +246,8 @@
 
         function drawOnWaveform(event) {
           const rect = waveformCanvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
+          const x = event.offsetX;
+          const y = event.offsetY;
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
           const sampleIndex = pixToSamp(x, canvasWidth);
