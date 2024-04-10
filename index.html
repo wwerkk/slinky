@@ -48,6 +48,8 @@
         let sources = [];
         let isMouseDown = false;
         let colorIndex = 0;
+        let isDrawing = false;
+        let lastDrawnSampleIndex = null;
 
         const bufferLength = audioContext.sampleRate * 1; // for 1 second of audio
         audioBuffer = audioContext.createBuffer(
@@ -190,24 +192,29 @@
 
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
-          if (!drawCheckbox.checked) resetPlayback(event.x);
+          if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.x);
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
-          if (drawCheckbox.checked) startDrawing(event);
+          if (drawCheckbox.checked) {
+            isDrawing = true;
+            drawOnWaveform(event);
+          }
           isMouseDown = true;
         });
 
         waveformCanvas.addEventListener("mousemove", (event) => {
-          if (isMouseDown && drawCheckbox.checked) {
-            continueDrawing(event);
+          if (isDrawing) {
+            drawOnWaveform(event);
           } else if (isMouseDown) resetPlayback(event.x);
         });
 
         window.addEventListener("mouseup", () => {
-          if (isMouseDown && drawCheckbox.checked) {
-            stopDrawing();
-          } else if (isMouseDown) isMouseDown = false;
+          if (isDrawing) {
+            isDrawing = false;
+            lastDrawnSampleIndex = null;
+          }
+          isMouseDown = false;
         });
 
         window.addEventListener("keydown", (event) => {
@@ -227,41 +234,24 @@
           return Math.floor(x * samplesPerPixel);
         }
 
-        function startDrawing(event) {
-          // Initialize drawing process here
-          if (!audioBuffer) return;
-          // Assuming mono for simplicity
-          const channelData = audioBuffer.getChannelData(0);
+        function drawOnWaveform(event) {
           const rect = waveformCanvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
           const sampleIndex = pixToSamp(event.x, rect, canvasWidth);
-          if (sampleIndex < 0) sampleIndex = 0;
-          else if (sampleIndex >= audioBuffer.length)
-            sampleIndex = audioBuffer.length - 1;
-
-          // Placeholder: Display sample index and value for debugging
-          console.log(`Start drawing at sample ${sampleIndex}`);
-        }
-
-        function continueDrawing(event) {
-          // Initialize drawing process here
-          if (!audioBuffer) return;
-          const channelData = audioBuffer.getChannelData(0);
-          const rect = waveformCanvas.getBoundingClientRect();
-          const canvasWidth = waveformCanvas.width;
-          const canvasHeight = waveformCanvas.height;
-          var sampleIndex = pixToSamp(event.x, rect, canvasWidth);
-          if (sampleIndex < 0) sampleIndex = 0;
-          else if (sampleIndex >= audioBuffer.length)
-            sampleIndex = audioBuffer.length - 1;
-
-          // Placeholder: Display sample index and value for debugging
-          console.log(`Drawing at sample ${sampleIndex}`);
-        }
-
-        function stopDrawing() {
-          // Finalize drawing process here
+          if (sampleIndex === lastDrawnSampleIndex) return;
+          lastDrawnSampleIndex = sampleIndex;
+          const amplitude = -1 * (1 - (y / canvasHeight) * 2);
+          // Assuming mono for simplicity. For stereo, you'd update both channels or a specific one.
+          let channels = [];
+          channels.push(audioBuffer.getChannelData(0));
+          channels.push(audioBuffer.getChannelData(1));
+          for (let channel of channels) {
+            channel[sampleIndex] = amplitude;
+          }
+          drawWaveform();
         }
       };
     </script>
