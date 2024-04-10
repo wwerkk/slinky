@@ -37,7 +37,7 @@
         let audioBuffer;
         let animationId;
         let currentTime = 0;
-        let source = null;
+        let sources = [];
         let isMouseDown = false;
 
         const bufferLength = audioContext.sampleRate * 1; // for 1 second of audio
@@ -91,26 +91,26 @@
 
         playButton.addEventListener("click", () => {
           if (!audioBuffer) return;
-          if (audioContext) {
-            audioContext.close(); // Close the current context
+          if (sources.length > 0 && !polyCheckbox.checked) {
+            for (var source of sources) source.stop(0);
           }
-          audioContext = new AudioContext(); // Create a new context
-          source = audioContext.createBufferSource();
+          var source = audioContext.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
           currentTime = 0; // Reset current time
           source.loop = loopCheckbox.checked;
-          console.log(source.loop);
           source.start(currentTime, 0); // Start from the beginning
+          sources.push(source);
           cancelAnimationFrame(animationId); // Stop previous animation frame
           drawPlayhead(); // Start drawing playhead from the beginning
         });
 
         const drawPlayhead = () => {
-          if (!audioContext || !source) return;
+          if (!audioContext || sources.length == 0) return;
 
           const loopCheckbox = document.getElementById("loopCheckbox");
           let playbackTime = audioContext.currentTime + currentTime;
+          var source = sources.at(-1);
           if (source.loop) {
             playbackTime = playbackTime % audioBuffer.duration;
           }
@@ -149,18 +149,17 @@
 
         function resetPlayback(x) {
           if (!audioBuffer) return;
-          if (audioContext && !polyCheckbox.checked) {
-            audioContext.close();
+          if (sources.length > 0 && !polyCheckbox.checked) {
+            for (var source of sources) source.stop(0);
           }
-          audioContext = new AudioContext();
-          source = audioContext.createBufferSource();
+          var source = audioContext.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
           if (x < 0) x = 0;
-          currentTime =
-            (x * audioBuffer.duration) / waveformCanvas.width;
+          currentTime = (x * audioBuffer.duration) / waveformCanvas.width;
           source.loop = loopCheckbox.checked;
           source.start(0, currentTime);
+          sources.push(source);
           cancelAnimationFrame(animationId);
           drawPlayhead();
         }
@@ -179,9 +178,10 @@
           const rect = waveformCanvas.getBoundingClientRect();
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
-          const sampleIndex = pixToSamp(event.x, rect, canvasWidth)
-          if (sampleIndex < 0) sampleIndex = 0
-          else if (sampleIndex >= audioBuffer.length) sampleIndex = audioBuffer.length - 1;
+          const sampleIndex = pixToSamp(event.x, rect, canvasWidth);
+          if (sampleIndex < 0) sampleIndex = 0;
+          else if (sampleIndex >= audioBuffer.length)
+            sampleIndex = audioBuffer.length - 1;
 
           // Placeholder: Display sample index and value for debugging
           console.log(`Start drawing at sample ${sampleIndex}`);
@@ -195,9 +195,10 @@
           const rect = waveformCanvas.getBoundingClientRect();
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
-          var sampleIndex = pixToSamp(event.x, rect, canvasWidth)
-          if (sampleIndex < 0) sampleIndex = 0
-          else if (sampleIndex >= audioBuffer.length) sampleIndex = audioBuffer.length - 1;
+          var sampleIndex = pixToSamp(event.x, rect, canvasWidth);
+          if (sampleIndex < 0) sampleIndex = 0;
+          else if (sampleIndex >= audioBuffer.length)
+            sampleIndex = audioBuffer.length - 1;
 
           // Placeholder: Display sample index and value for debugging
           console.log(`Drawing at sample ${sampleIndex}`);
