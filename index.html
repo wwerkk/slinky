@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Audio Player</title>
+    <style>
+      canvas {
+        border: 1px solid #000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <input type="file" id="fileInput" accept="audio/*" />
+    <br />
+    <canvas id="waveform" width="800" height="100"></canvas>
+    <br />
+    <button id="playButton">Play</button>
+
+    <script>
+      window.onload = () => {
+        const fileInput = document.getElementById("fileInput");
+        const playButton = document.getElementById("playButton");
+        const waveformCanvas = document.getElementById("waveform");
+        const ctx = waveformCanvas.getContext("2d");
+        let audioContext;
+        let audioBuffer;
+        let animationId;
+        let currentTime = 0;
+        let source = null;
+
+        let isMouseDown = false;
+
+        fileInput.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          const arrayBuffer = await readFile(file);
+          audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+          drawWaveform();
+        });
+
+        const readFile = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+          });
+        };
+
+        const drawWaveform = () => {
+          const data = audioBuffer.getChannelData(0);
+          const step = Math.ceil(data.length / waveformCanvas.width);
+          const amp = waveformCanvas.height / 2;
+          ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+          ctx.beginPath();
+          for (let i = 0; i < waveformCanvas.width; i++) {
+            const min = 1 + step * i;
+            const max = 1 + step * i + step;
+            let minVal = 0;
+            let maxVal = 0;
+            for (let j = min; j < max; j++) {
+              if (data[j] < minVal) minVal = data[j];
+              if (data[j] > maxVal) maxVal = data[j];
+            }
+            const x = i;
+            const y = (1 + minVal) * amp;
+            const height = Math.max(1, (maxVal - minVal) * amp);
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 1;
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + height);
+          }
+          ctx.stroke();
+        };
+
+        playButton.addEventListener("click", () => {
+          if (!audioBuffer) return;
+          if (audioContext) {
+            audioContext.close(); // Close the current context
+          }
+          audioContext = new AudioContext(); // Create a new context
+          source = audioContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioContext.destination);
+          currentTime = 0; // Reset current time
+          source.start(currentTime, 0); // Start from the beginning
+          cancelAnimationFrame(animationId); // Stop previous animation frame
+          drawPlayhead(); // Start drawing playhead from the beginning
+        });
+
+        const drawPlayhead = () => {
+          const position =
+            ((audioContext.currentTime + currentTime) * waveformCanvas.width) /
+            audioBuffer.duration;
+          ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+          drawWaveform();
+          ctx.fillStyle = "red";
+          ctx.fillRect(position, 0, 1, waveformCanvas.height);
+          animationId = requestAnimationFrame(drawPlayhead);
+        };
+
+        // Modify the existing waveformCanvas click event listener
+        waveformCanvas.addEventListener("click", (event) => {
+          if (!audioBuffer || isMouseDown) return; // Prevent click action when dragging
+          resetPlayback(event.offsetX);
+        });
+
+        // Add event listeners for mouse down, move, and up
+        waveformCanvas.addEventListener("mousedown", (event) => {
+          isMouseDown = true;
+        });
+
+        waveformCanvas.addEventListener("mousemove", (event) => {
+          if (isMouseDown) {
+            resetPlayback(event.offsetX);
+          }
+        });
+
+        window.addEventListener("mouseup", () => {
+          if (isMouseDown) {
+            isMouseDown = false;
+          }
+        });
+
+        // Define the resetPlayback function to update the playback and playhead based on mouse position
+        function resetPlayback(clickPositionX) {
+          if (!audioBuffer) return;
+          if (audioContext) {
+            audioContext.close(); // Close the current context
+          }
+          audioContext = new AudioContext(); // Create a new context
+          source = audioContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioContext.destination);
+          currentTime =
+            (clickPositionX * audioBuffer.duration) / waveformCanvas.width;
+          source.start(0, currentTime);
+          cancelAnimationFrame(animationId);
+          drawPlayhead();
+        }
+      };
+    </script>
+  </body>
+</html>
