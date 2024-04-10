@@ -17,11 +17,14 @@
     <canvas id="waveform" width="800" height="100"></canvas>
     <br />
     <button id="playButton">Play</button>
+    <input id="polyCheckbox" name="poly" type="checkbox">
+    <label for="polyCheckbox">Poly</label>
 
     <script>
       window.onload = () => {
         const fileInput = document.getElementById("fileInput");
         const playButton = document.getElementById("playButton");
+        const polyCheckbox = document.getElementById("polyCheckbox");
         const waveformCanvas = document.getElementById("waveform");
         const ctx = waveformCanvas.getContext("2d");
         let audioContext;
@@ -100,13 +103,11 @@
           animationId = requestAnimationFrame(drawPlayhead);
         };
 
-        // Modify the existing waveformCanvas click event listener
         waveformCanvas.addEventListener("click", (event) => {
-          if (!audioBuffer || isMouseDown) return; // Prevent click action when dragging
+          if (!audioBuffer) return;
           resetPlayback(event.offsetX);
         });
 
-        // Add event listeners for mouse down, move, and up
         waveformCanvas.addEventListener("mousedown", (event) => {
           isMouseDown = true;
         });
@@ -123,13 +124,12 @@
           }
         });
 
-        // Define the resetPlayback function to update the playback and playhead based on mouse position
         function resetPlayback(clickPositionX) {
           if (!audioBuffer) return;
-          if (audioContext) {
-            audioContext.close(); // Close the current context
+          if (audioContext && !polyCheckbox.checked) {
+            audioContext.close();
           }
-          audioContext = new AudioContext(); // Create a new context
+          audioContext = new AudioContext();
           source = audioContext.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
