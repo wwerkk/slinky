@@ -212,8 +212,8 @@
 
         window.addEventListener("keydown", (event) => {
           let val = Number(voicesNumbox.value);
-          if (event.key == "w") voicesNumbox.value = val + 1;
-          else if (event.key == "s")
+          if (event.key == "e") voicesNumbox.value = val + 1;
+          else if (event.key == "q")
             voicesNumbox.value = val > 1 ? val - 1 : val;
           while (sources.length > Number(voicesNumbox.value)) {
             sources[0].source.stop();
