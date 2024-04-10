@@ -89,6 +89,23 @@
           ctx.stroke();
         };
 
+        function resetPlayback(x) {
+          if (!audioBuffer) return;
+          if (sources.length > 0 && !polyCheckbox.checked) {
+            for (var source of sources) source.stop(0);
+          }
+          var source = audioContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioContext.destination);
+          if (x < 0) x = 0;
+          currentTime = (x * audioBuffer.duration) / waveformCanvas.width;
+          source.loop = loopCheckbox.checked;
+          source.start(0, currentTime);
+          sources.push(source);
+          cancelAnimationFrame(animationId);
+          drawPlayhead();
+        }
+
         playButton.addEventListener("click", () => {
           if (!audioBuffer) return;
           if (sources.length > 0 && !polyCheckbox.checked) {
@@ -146,23 +163,6 @@
             stopDrawing();
           } else if (isMouseDown) isMouseDown = false;
         });
-
-        function resetPlayback(x) {
-          if (!audioBuffer) return;
-          if (sources.length > 0 && !polyCheckbox.checked) {
-            for (var source of sources) source.stop(0);
-          }
-          var source = audioContext.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(audioContext.destination);
-          if (x < 0) x = 0;
-          currentTime = (x * audioBuffer.duration) / waveformCanvas.width;
-          source.loop = loopCheckbox.checked;
-          source.start(0, currentTime);
-          sources.push(source);
-          cancelAnimationFrame(animationId);
-          drawPlayhead();
-        }
 
         function pixToSamp(x, rect, canvasWidth) {
           x -= rect.left;
