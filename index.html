@@ -17,15 +17,18 @@
     <canvas id="waveform" width="800" height="100"></canvas>
     <br />
     <button id="playButton">Play</button>
-    <input id="polyCheckbox" name="poly" type="checkbox">
+    <input id="polyCheckbox" name="poly" type="checkbox" />
     <label for="polyCheckbox">Poly</label>
+    <input id="drawCheckbox" name="draw" type="checkbox" />
+    <label for="drawCheckbox">Draw</label>
 
     <script>
       window.onload = () => {
         const fileInput = document.getElementById("fileInput");
+        const waveformCanvas = document.getElementById("waveform");
         const playButton = document.getElementById("playButton");
         const polyCheckbox = document.getElementById("polyCheckbox");
-        const waveformCanvas = document.getElementById("waveform");
+        const drawCheckbox = document.getElementById("drawCheckbox");
         const ctx = waveformCanvas.getContext("2d");
         let audioContext;
         let audioBuffer;
@@ -109,17 +112,22 @@
         });
 
         waveformCanvas.addEventListener("mousedown", (event) => {
+          if (drawCheckbox.checked) startDrawing(event);
           isMouseDown = true;
         });
 
         waveformCanvas.addEventListener("mousemove", (event) => {
           if (isMouseDown) {
-            resetPlayback(event.offsetX);
+            if (drawCheckbox.checked) continueDrawing(event);
+            else resetPlayback(event.offsetX);
           }
         });
 
         window.addEventListener("mouseup", () => {
           if (isMouseDown) {
+            if (drawCheckbox.checked) {
+              stopDrawing();
+            }
             isMouseDown = false;
           }
         });
@@ -138,6 +146,21 @@
           source.start(0, currentTime);
           cancelAnimationFrame(animationId);
           drawPlayhead();
+        }
+
+        function startDrawing(event) {
+          console.log(event.offsetX, event.offsetY);
+          // Initialize drawing process here
+        }
+
+        function continueDrawing(event) {
+          console.log(event.offsetX, event.offsetY);
+          // Continue drawing or modifying the waveform here
+        }
+
+        function stopDrawing() {
+          console.log("Stop drawing");
+          // Finalize drawing process here
         }
       };
     </script>
