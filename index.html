@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Audio Player</title>
+    <title>Head</title>
     <style>
       canvas {
         border: 1px solid #000;
@@ -81,21 +81,13 @@
           ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
           ctx.beginPath();
           for (let i = 0; i < waveformCanvas.width; i++) {
-            const min = 1 + step * i;
-            const max = 1 + step * i + step;
-            let minVal = 0;
-            let maxVal = 0;
-            for (let j = min; j < max; j++) {
-              if (data[j] < minVal) minVal = data[j];
-              if (data[j] > maxVal) maxVal = data[j];
-            }
-            const x = i;
-            const y = (1 + minVal) * amp;
-            const height = Math.max(1, (maxVal - minVal) * amp);
+            var x = i * step;
+            x = Math.floor(x);
+            const y = data[x];
             ctx.strokeStyle = "#000";
             ctx.lineWidth = 1;
-            ctx.moveTo(x, y);
-            ctx.lineTo(x, y + height);
+            ctx.moveTo(i, amp);
+            ctx.lineTo(i, y);
           }
           ctx.stroke();
         };
