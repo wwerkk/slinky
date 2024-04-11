@@ -51,7 +51,8 @@
         let isDrawing = false;
         let lastDrawnSampleIndex = null;
 
-        const bufferLength = audioContext.sampleRate * 0.1; // for 100 ms of audio
+        const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
+        waveformCanvas.width = bufferLength;
         audioBuffer = audioContext.createBuffer(
           2,
           bufferLength,
