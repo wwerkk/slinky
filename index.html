@@ -16,16 +16,16 @@
     <br />
     <canvas id="waveform" width="800" height="100"></canvas>
     <br />
-    <button id="playButton">Play</button>
+    <button id="playButton">Play (Space)</button>
     <input id="loopCheckbox" name="loop" type="checkbox" />
-    <label for="loopCheckbox">Loop</label>
+    <label for="loopCheckbox">Loop (Shift)</label>
     <input id="polyCheckbox" name="poly" type="checkbox" />
-    <label for="polyCheckbox">Poly</label>
+    <label for="polyCheckbox">Poly (Cmd/Ctrl)</label>
     <input id="drawCheckbox" name="draw" type="checkbox" />
-    <label for="drawCheckbox">Draw</label>
+    <label for="drawCheckbox">Draw (Alt)</label>
     <br />
     <br />
-    <label>Voices: </label>
+    <label>Voices (Q/E): </label>
     <input id="voicesNumbox" type="number" min="1" max="128" value="8" />
 
     <script>
@@ -227,7 +227,7 @@
           }
           if (event.key == "Shift") loopCheckbox.checked = true;
           if (event.key == "Alt") drawCheckbox.checked = true;
-          if (event.key == "Meta") polyCheckbox.checked = true;
+          if (event.key == "Meta" || event.key == "Control") polyCheckbox.checked = true;
           
           let val = Number(voicesNumbox.value);
           if (event.key == "e") voicesNumbox.value = val + 1;
@@ -242,7 +242,7 @@
         window.addEventListener("keyup", (event) => {
           if (event.key == "Shift") loopCheckbox.checked = false;
           if (event.key == "Alt") drawCheckbox.checked = false;
-          if (event.key == "Meta") polyCheckbox.checked = false;
+          if (event.key == "Meta" || event.key == "Control") polyCheckbox.checked = false;
         });
 
         function pixToSamp(x, canvasWidth) {
