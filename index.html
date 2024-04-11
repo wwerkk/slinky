@@ -196,7 +196,7 @@
           if (event.touches) {
             return { x: event.touches[0].clientX, y: event.touches[0].clientY };
           } else {
-            return { x: event.clientX, y: event.clientY };
+            return { x: event.offsetX, y: event.offsetY };
           }
         }
 
@@ -223,9 +223,9 @@
         function handleMove(event) {
           event.preventDefault(); // Prevent scrolling when touching inside the canvas
           if (isDrawing || isMouseDown) {
-            const { x } = getEventPosition(event);
+            const { x, y } = getEventPosition(event);
             if (isDrawing) {
-              drawOnWaveform(event);
+              drawOnWaveform(x, y);
             } else {
               resetPlayback(x);
             }
@@ -274,10 +274,8 @@
           return Math.floor(x);
         }
 
-        function drawOnWaveform(event) {
+        function drawOnWaveform(x, y) {
           const rect = waveformCanvas.getBoundingClientRect();
-          const x = event.offsetX;
-          const y = event.offsetY;
           const canvasWidth = waveformCanvas.width;
           const canvasHeight = waveformCanvas.height;
           const sampleIndex = pixToSamp(x, canvasWidth);
