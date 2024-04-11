@@ -192,32 +192,56 @@
           animationId = requestAnimationFrame(drawPlayhead);
         };
 
+        function getEventPosition(event) {
+          if (event.touches) {
+            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+          } else {
+            return { x: event.clientX, y: event.clientY };
+          }
+        }
+
         waveformCanvas.addEventListener("click", (event) => {
           if (!audioBuffer) return;
           if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.offsetX);
         });
 
-        waveformCanvas.addEventListener("mousedown", (event) => {
+        waveformCanvas.addEventListener("mousedown", handleStart);
+        waveformCanvas.addEventListener("touchstart", handleStart);
+
+        function handleStart(event) {
+          event.preventDefault(); // Prevents additional mouse events in touch environments
           if (drawCheckbox.checked) {
             isDrawing = true;
             drawOnWaveform(event);
           }
           isMouseDown = true;
-        });
+        }
 
-        waveformCanvas.addEventListener("mousemove", (event) => {
-          if (isDrawing) {
-            drawOnWaveform(event);
-          } else if (isMouseDown) resetPlayback(event.offsetX);
-        });
+        waveformCanvas.addEventListener("mousemove", handleMove);
+        waveformCanvas.addEventListener("touchmove", handleMove);
 
-        window.addEventListener("mouseup", () => {
+        function handleMove(event) {
+          event.preventDefault(); // Prevent scrolling when touching inside the canvas
+          if (isDrawing || isMouseDown) {
+            const { x } = getEventPosition(event);
+            if (isDrawing) {
+              drawOnWaveform(event);
+            } else {
+              resetPlayback(x);
+            }
+          }
+        }
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
+
+        function handleEnd() {
           if (isDrawing) {
             isDrawing = false;
             lastDrawnSampleIndex = null;
           }
           isMouseDown = false;
-        });
+        }
 
         window.addEventListener("keydown", (event) => {
           event.preventDefault();
