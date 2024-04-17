@@ -50,6 +50,8 @@
         let colorIndex = 0;
         let isDrawing = false;
         let lastDrawnSampleIndex = null;
+        let lastX;
+        let deltaX = 0;
 
         const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
         waveformCanvas.width = bufferLength;
@@ -107,6 +109,7 @@
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
           source.loop = loopCheckbox.checked;
+          source.playbackRate.value = 1 + deltaX / 100;
           if (sources.length > 0 && !polyCheckbox.checked) {
             for (var src of sources) src.source.stop();
             sources = sources.slice(0, 1);
@@ -139,6 +142,8 @@
 
         function resetPlayback(x) {
           if (!audioBuffer) return;
+          deltaX = x - lastX;
+          deltaX = isFinite(deltaX) ? deltaX : 0;
           var source = audioContext.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(audioContext.destination);
@@ -146,6 +151,7 @@
           else if (x > waveformCanvas.width) x = waveformCanvas.width - 1;
           var startOffset = (x * audioBuffer.duration) / waveformCanvas.width;
           source.loop = loopCheckbox.checked;
+          source.playbackRate.value = 1 + deltaX / 100;
           if (sources.length > 0 && !polyCheckbox.checked) {
             for (var src of sources) src.source.stop();
             sources = sources.slice(0, 1);
@@ -167,6 +173,7 @@
           sources.at(-1).source.start(0, startOffset);
           cancelAnimationFrame(animationId);
           drawPlayhead();
+          lastX = x;
         }
 
         const drawPlayhead = () => {
@@ -184,7 +191,6 @@
             }
             const position =
               (playbackTime / audioBuffer.duration) * waveformCanvas.width;
-            console.log(position, waveformCanvas.width);
             ctx.fillStyle = src.color;
             ctx.fillRect(position, 0, 1, waveformCanvas.height);
           });
