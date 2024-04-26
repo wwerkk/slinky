@@ -223,7 +223,7 @@
         deltaX = x - lastX;
         deltaTime = audioContext.currentTime - lastTime;
         var rate = calculatePlaybackRate(deltaX, deltaTime);
-        rate = isFinite(rate) ? rate : 1;
+        rate = isFinite(rate) ? Math.abs(rate) : 1;
         var duration = Number(durNumbox.value);
         var source = audioContext.createBufferSource();
         var gain = audioContext.createGain();
