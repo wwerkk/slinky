@@ -71,7 +71,7 @@
       let lastDrawnSampleIndex = null;
       let lastX;
       let deltaX = 0;
-      
+
       const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
       waveformCanvas.width = bufferLength;
       audioBuffer = audioContext.createBuffer(
@@ -178,10 +178,10 @@
             startTime: audioContext.currentTime,
             startOffset: 0,
             color: colors[colorIndex++ % colors.length],
-            duration: durNumbox.value,
+            duration: Number(durNumbox.value),
           });
         }
-        sources.at(-1).source.start(0, 0, durNumbox.value);
+        sources.at(-1).source.start(0, 0, Number(durNumbox.value));
         cancelAnimationFrame(animationId);
         drawPlayhead();
       });
@@ -232,10 +232,10 @@
             startTime: audioContext.currentTime,
             startOffset: startOffset,
             color: colors[colorIndex++ % colors.length],
-            duration: durNumbox.value,
+            duration: Number(durNumbox.value),
           });
         }
-        sources.at(-1).source.start(0, startOffset, durNumbox.value);
+        sources.at(-1).source.start(0, startOffset, Number(durNumbox.value));
         cancelAnimationFrame(animationId);
         drawPlayhead();
         lastX = x;
@@ -248,9 +248,13 @@
         drawWaveform();
 
         sources.forEach((src) => {
-          if (src == null) pass;
+          if (src == null) return;
           let playbackTime =
             audioContext.currentTime - src.startTime + src.startOffset;
+          if (audioContext.currentTime - src.startTime > src.duration) {
+            src.source.stop();
+            sources = sources.filter((s) => s !== src);
+          }
           if (src.source.loop) {
             playbackTime = playbackTime % audioBuffer.duration;
           }
