@@ -70,7 +70,9 @@
       let isDrawing = false;
       let lastDrawnSampleIndex = null;
       let lastX;
+      let lastTime;
       let deltaX = 0;
+      let deltaTime = 0;
 
       const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
       waveformCanvas.width = bufferLength;
@@ -219,7 +221,10 @@
       function resetPlayback(x) {
         if (!audioBuffer) return;
         deltaX = x - lastX;
-        deltaX = isFinite(deltaX) ? deltaX : 0;
+        deltaTime = audioContext.currentTime - lastTime;
+        var rate = calculatePlaybackRate(deltaX, deltaTime);
+        rate = isFinite(rate) ? rate : 1;
+        console.log(rate);
         var duration = Number(durNumbox.value);
         var source = audioContext.createBufferSource();
         var gain = audioContext.createGain();
@@ -229,7 +234,7 @@
         else if (x > waveformCanvas.width) x = waveformCanvas.width - 1;
         var startOffset = (x * audioBuffer.duration) / waveformCanvas.width;
         source.loop = loopCheckbox.checked;
-        source.playbackRate.value = 1 + deltaX / 100;
+        source.playbackRate.value = rate;
         gain.connect(audioContext.destination);
         gain.connect(mediaStreamDestination);
         const attackTime = duration * 0.25;
@@ -265,6 +270,7 @@
         cancelAnimationFrame(animationId);
         drawPlayhead();
         lastX = x;
+        lastTime = audioContext.currentTime;
       }
 
       const drawPlayhead = () => {
@@ -342,6 +348,14 @@
           lastDrawnSampleIndex = null;
         }
         isMouseDown = false;
+      }
+
+      // Calculate playback rate based on deltaX and time difference
+      function calculatePlaybackRate(deltaX, deltaTime) {
+        const canvasWidth = waveformCanvas.width;
+        const bufferDuration = audioBuffer.duration;
+        const dragDurationInSeconds = (deltaX / canvasWidth) * bufferDuration;
+        return dragDurationInSeconds / deltaTime;
       }
 
       window.addEventListener("keydown", (event) => {
