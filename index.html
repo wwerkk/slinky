@@ -23,6 +23,7 @@
     <label for="polyCheckbox">Poly (Cmd/Ctrl)</label>
     <input id="drawCheckbox" name="draw" type="checkbox" />
     <label for="drawCheckbox">Draw (Alt)</label>
+    <button id="clearButton">Clear</button>
     <br />
     <br />
     <label>Voices (Q/E): </label>
@@ -40,6 +41,7 @@
         const loopCheckbox = document.getElementById("loopCheckbox");
         const polyCheckbox = document.getElementById("polyCheckbox");
         const drawCheckbox = document.getElementById("drawCheckbox");
+        const clearButton = document.getElementById("clearButton");
         const voicesNumbox = document.getElementById("voicesNumbox");
         const ctx = waveformCanvas.getContext("2d");
         let audioContext = new AudioContext();
@@ -131,6 +133,16 @@
           sources.at(-1).source.start();
           cancelAnimationFrame(animationId);
           drawPlayhead();
+        });
+
+        clearButton.addEventListener("click", () => {
+          if (!audioBuffer) return;
+          audioBuffer = audioContext.createBuffer(
+          2,
+          bufferLength,
+          audioContext.sampleRate
+        );
+        drawWaveform();
         });
 
         voicesNumbox.addEventListener("change", () => {
