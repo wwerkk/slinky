@@ -156,16 +156,28 @@
 
       playButton.addEventListener("click", () => {
         if (!audioBuffer) return;
+        var duration = Number(durNumbox.value);
         var source = audioContext.createBufferSource();
+        var gain = audioContext.createGain();
         source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.connect(mediaStreamDestination);
+        source.connect(gain);
         source.loop = loopCheckbox.checked;
         source.playbackRate.value = 1 + deltaX / 100;
+        gain.connect(audioContext.destination);
+        gain.connect(mediaStreamDestination);
+        const attackTime = duration * 0.25;
+        const releaseTime = duration * 0.25;
+        const sustainLevel = 1;
+        const currentTime = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, currentTime);
+        gain.gain.linearRampToValueAtTime(sustainLevel, currentTime + attackTime);
+        gain.gain.setValueAtTime(sustainLevel, currentTime + duration - releaseTime);
+        gain.gain.linearRampToValueAtTime(0, currentTime + duration);
         if (sources.length > 0 && !polyCheckbox.checked) {
           for (var src of sources) src.source.stop();
           sources = sources.slice(0, 1);
           sources[0].source = source;
+          sources[0].gain = gain;
           sources[0].startTime = audioContext.currentTime;
           sources[0].startOffset = 0;
         } else {
@@ -175,13 +187,14 @@
           }
           sources.push({
             source: source,
+            gain: gain,
             startTime: audioContext.currentTime,
             startOffset: 0,
             color: colors[colorIndex++ % colors.length],
-            duration: Number(durNumbox.value),
+            duration: duration,
           });
         }
-        sources.at(-1).source.start(0, 0, Number(durNumbox.value));
+        sources.at(-1).source.start(0, 0, duration);
         cancelAnimationFrame(animationId);
         drawPlayhead();
       });
@@ -207,19 +220,31 @@
         if (!audioBuffer) return;
         deltaX = x - lastX;
         deltaX = isFinite(deltaX) ? deltaX : 0;
+        var duration = Number(durNumbox.value);
         var source = audioContext.createBufferSource();
+        var gain = audioContext.createGain();
         source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.connect(mediaStreamDestination);
+        source.connect(gain);
         if (x < 0) x = 0;
         else if (x > waveformCanvas.width) x = waveformCanvas.width - 1;
         var startOffset = (x * audioBuffer.duration) / waveformCanvas.width;
         source.loop = loopCheckbox.checked;
         source.playbackRate.value = 1 + deltaX / 100;
+        gain.connect(audioContext.destination);
+        gain.connect(mediaStreamDestination);
+        const attackTime = duration * 0.25;
+        const releaseTime = duration * 0.25;
+        const sustainLevel = 1;
+        const currentTime = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, currentTime);
+        gain.gain.linearRampToValueAtTime(sustainLevel, currentTime + attackTime);
+        gain.gain.setValueAtTime(sustainLevel, currentTime + duration - releaseTime);
+        gain.gain.linearRampToValueAtTime(0, currentTime + duration);
         if (sources.length > 0 && !polyCheckbox.checked) {
           for (var src of sources) src.source.stop();
           sources = sources.slice(0, 1);
           sources[0].source = source;
+          sources[0].gain = gain;
           sources[0].startTime = audioContext.currentTime;
           sources[0].startOffset = startOffset;
         } else {
@@ -229,6 +254,7 @@
           }
           sources.push({
             source: source,
+            gain: gain,
             startTime: audioContext.currentTime,
             startOffset: startOffset,
             color: colors[colorIndex++ % colors.length],
