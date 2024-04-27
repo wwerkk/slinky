@@ -306,11 +306,6 @@
         }
       }
 
-      waveformCanvas.addEventListener("click", (event) => {
-        if (!audioBuffer) return;
-        if (!drawCheckbox.checked && !isDrawing) resetPlayback(event.offsetX);
-      });
-
       waveformCanvas.addEventListener("mousedown", handleStart);
       waveformCanvas.addEventListener("touchstart", handleStart);
 
@@ -342,6 +337,7 @@
       window.addEventListener("touchend", handleEnd);
 
       function handleEnd() {
+        event.preventDefault(); // Prevents additional mouse events in touch environments
         if (isDrawing) {
           isDrawing = false;
           lastDrawnSampleIndex = null;
@@ -349,7 +345,6 @@
         isMouseDown = false;
       }
 
-      // Calculate playback rate based on deltaX and time difference
       function calculatePlaybackRate(deltaX, deltaTime) {
         const canvasWidth = waveformCanvas.width;
         const bufferDuration = audioBuffer.duration;
@@ -453,8 +448,6 @@
         }
       }
 
-
-
       startRecordButton.addEventListener('click', () => {
         startRecording();
       });
@@ -482,7 +475,6 @@
       replaceRecordButton.addEventListener('click', () => {
         replaceRecording();
       });
-
 
     };
   </script>
