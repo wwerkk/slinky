@@ -87,7 +87,12 @@
       let accumulatedRecordingTime = 0;
 
       const mediaStreamDestination = audioContext.createMediaStreamDestination();
-      let mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'audio/webm' });
+      let mediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'audio/webm' });
+      } catch (NotSupportedError) {
+        mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'video/mp4' });
+      }
       let recordedChunks = [];
 
       mediaRecorder.ondataavailable = (event) => {
