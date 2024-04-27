@@ -370,9 +370,9 @@
         if (event.key == "Meta" || event.key == "Control")
           polyCheckbox.checked = true;
         let dur = Number(durNumbox.value);
-        if (event.key.toLowerCase() == "d") durNumbox.value = dur + 0.01;
+        if (event.key.toLowerCase() == "d") durNumbox.value = (dur + 0.005).toFixed(3);
         else if (event.key.toLowerCase() == "a")
-          durNumbox.value = dur > 0.01 ? dur - 0.01 : dur;
+          durNumbox.value = dur > 0.005 ? (dur - 0.005).toFixed(3) : dur;
         let vcs = Number(voicesNumbox.value);
         if (event.key.toLowerCase() == "e") voicesNumbox.value = vcs + 1;
         else if (event.key.toLowerCase() == "q")
