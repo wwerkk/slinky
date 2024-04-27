@@ -342,7 +342,6 @@
       window.addEventListener("touchend", handleEnd);
 
       function handleEnd() {
-        event.preventDefault(); // Prevents additional mouse events in touch environments
         if (isDrawing) {
           isDrawing = false;
           lastDrawnSampleIndex = null;
