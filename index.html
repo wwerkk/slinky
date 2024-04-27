@@ -123,7 +123,6 @@
         const file = event.target.files[0];
         const arrayBuffer = await readFile(file);
         audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-        waveformCanvas.width = bufferLength;
         drawWaveform();
       });
 
