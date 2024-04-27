@@ -357,7 +357,8 @@
       }
 
       window.addEventListener("keydown", (event) => {
-        event.preventDefault();
+        if (!Number(event.key) && event.key !== "." && event.key !== "Backspace")
+          event.preventDefault();
         if (event.key.toLowerCase() == "r") startRecording();
         if (event.key.toLowerCase() == "t") {
           stopRecording();
