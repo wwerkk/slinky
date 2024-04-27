@@ -359,7 +359,6 @@
 
       window.addEventListener("keydown", (event) => {
         let mappedKeys = ["c", "v", "z", "x", " ", "Shift", "Alt", "Meta", "d", "f"];
-        console.log(event.key, mappedKeys.includes(event.key) || mappedKeys.includes(event.key.toLowerCase()));
         if (mappedKeys.includes(event.key) || mappedKeys.includes(event.key.toLowerCase()))
           event.preventDefault();
         if (event.key.toLowerCase() == "d") startRecording();
