@@ -1,490 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slinky Player</title>
-  <style>
-    canvas {
-      border: 1px solid #000;
-    }
-  </style>
-</head>
-
-<body>
-  <input type="file" id="fileInput" accept="audio/*" />
-  <br />
-  <canvas id="waveform" width="800" height="100"></canvas>
-  <br />
-  <button id="playButton">Play (Space)</button>
-  <input id="loopCheckbox" name="loop" type="checkbox" />
-  <label for="loopCheckbox">Loop (Shift)</label>
-  <input id="polyCheckbox" name="poly" type="checkbox" />
-  <label for="polyCheckbox">Poly (Cmd/Ctrl)</label>
-  <input id="drawCheckbox" name="draw" type="checkbox" />
-  <label for="drawCheckbox">Draw (Alt)</label>
-  <button id="clearButton">Clear</button>
-  <br />
-  <br />
-  <label>Voices (Z/X): </label>
-  <input id="voicesNumbox" type="number" min="1" max="128" value="8" />
-  <label>Duration (C/V):</label>
-  <input id="durNumbox" type="number" min="0.005" max="1" value="0.1" step="0.005" />
-  <br />
-  <br />
-  <label>Record (D):</label>
-  <button id="startRecordButton">Start</button>
-  <button id="stopRecordButton">Stop</button>
-  <button id="saveRecordButton">Save</button>
-  <button id="replaceRecordButton">Replace (F)</button>
-  <span id="recordingTime">00:00:00</span>
-
-  <script>
-    const colors = Array.from(
-      { length: 128 },
-      (_, i) => `hsl(${(i / 128) * 360}, 100%, 50%)`
-    );
-    window.onload = () => {
-      const fileInput = document.getElementById("fileInput");
-      const waveformCanvas = document.getElementById("waveform");
-      const playButton = document.getElementById("playButton");
-      const loopCheckbox = document.getElementById("loopCheckbox");
-      const polyCheckbox = document.getElementById("polyCheckbox");
-      const drawCheckbox = document.getElementById("drawCheckbox");
-      const clearButton = document.getElementById("clearButton");
-      const voicesNumbox = document.getElementById("voicesNumbox");
-      const durNumbox = document.getElementById("durNumbox");
-      const startRecordButton = document.getElementById('startRecordButton');
-      const stopRecordButton = document.getElementById('stopRecordButton');
-      const saveRecordButton = document.getElementById('saveRecordButton');
-      const replaceRecordButton = document.getElementById('replaceRecordButton');
-      const ctx = waveformCanvas.getContext("2d");
-
-      let audioContext = new AudioContext();
-      let audioBuffer;
-      let animationId;
-      let sources = [];
-      let isMouseDown = false;
-      let colorIndex = 0;
-      let isDrawing = false;
-      let lastDrawnSampleIndex = null;
-      let lastX;
-      let lastTime;
-      let deltaX = 0;
-      let deltaTime = 0;
-
-      const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
-      waveformCanvas.width = bufferLength;
-      audioBuffer = audioContext.createBuffer(
-        2,
-        bufferLength,
-        audioContext.sampleRate
-      );
-
-      let recordingStartTime;
-      let recordingInterval;
-      let accumulatedRecordingTime = 0;
-
-      const mediaStreamDestination = audioContext.createMediaStreamDestination();
-      let mediaRecorder;
-      try {
-        mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'audio/webm' });
-      } catch (NotSupportedError) {
-        mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'video/mp4' });
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slinky Player</title>
+    <style>
+      canvas {
+        border: 1px solid #000;
       }
-      let recordedChunks = [];
+    </style>
+  </head>
 
-      mediaRecorder.ondataavailable = (event) => {
-        recordedChunks.push(event.data);
-      };
+  <body>
+    <input type="file" id="fileInput" accept="audio/*" />
+    <br />
+    <canvas id="waveform" width="800" height="100"></canvas>
+    <br />
+    <button id="playButton">Play</button>
+    <input id="loopCheckbox" name="loop" type="checkbox" />
+    <label for="loopCheckbox">Loop</label>
+    <input id="polyCheckbox" name="poly" type="checkbox" />
+    <label for="polyCheckbox">Poly</label>
+    <input id="drawCheckbox" name="draw" type="checkbox" />
+    <label for="drawCheckbox">Draw</label>
+    <button id="clearButton">Clear</button>
+    <br />
+    <br />
+    <label>Voices: </label>
+    <input id="voicesNumbox" type="number" min="1" max="128" value="8" />
+    <label>Duration:</label>
+    <input
+      id="durNumbox"
+      type="number"
+      min="0.005"
+      max="1"
+      value="0.1"
+      step="0.005"
+    />
+    <br />
+    <br />
+    <label>Record:</label>
+    <button id="startRecordButton">Start</button>
+    <button id="stopRecordButton">Stop</button>
+    <button id="saveRecordButton">Save</button>
+    <button id="replaceRecordButton">Replace</button>
+    <span id="recordingTime">00:00:00</span>
 
-      mediaRecorder.onstop = function () {
-        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        console.log(`Recording stopped. Current blob size: ${blob.size} bytes`);
-      };
+    <script>
+      const colors = Array.from(
+        { length: 128 },
+        (_, i) => `hsl(${(i / 128) * 360}, 100%, 50%)`
+      );
+      window.onload = () => {
+        const fileInput = document.getElementById("fileInput");
+        const waveformCanvas = document.getElementById("waveform");
+        const playButton = document.getElementById("playButton");
+        const loopCheckbox = document.getElementById("loopCheckbox");
+        const polyCheckbox = document.getElementById("polyCheckbox");
+        const drawCheckbox = document.getElementById("drawCheckbox");
+        const clearButton = document.getElementById("clearButton");
+        const voicesNumbox = document.getElementById("voicesNumbox");
+        const durNumbox = document.getElementById("durNumbox");
+        const startRecordButton = document.getElementById("startRecordButton");
+        const stopRecordButton = document.getElementById("stopRecordButton");
+        const saveRecordButton = document.getElementById("saveRecordButton");
+        const replaceRecordButton = document.getElementById(
+          "replaceRecordButton"
+        );
+        const ctx = waveformCanvas.getContext("2d");
 
-      const updateRecordingTime = () => {
-        const currentTime = Date.now();
-        const elapsedTime = accumulatedRecordingTime + (currentTime - recordingStartTime);
-        const seconds = Math.floor((elapsedTime / 1000) % 60);
-        const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
-        const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+        let audioContext = new AudioContext();
+        let audioBuffer;
+        let animationId;
+        let sources = [];
+        let isMouseDown = false;
+        let colorIndex = 0;
+        let isDrawing = false;
+        let lastDrawnSampleIndex = null;
+        let lastX;
+        let lastTime;
+        let deltaX = 0;
+        let deltaTime = 0;
 
-        const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-        const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-        const formattedHours = hours < 10 ? `0${hours}` : hours;
-
-        document.getElementById('recordingTime').textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-      };
-
-      fileInput.addEventListener("change", async (event) => {
-        const file = event.target.files[0];
-        const arrayBuffer = await readFile(file);
-        audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-        drawWaveform();
-      });
-
-      const readFile = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsArrayBuffer(file);
-        });
-      };
-
-      const drawWaveform = () => {
-        const data = audioBuffer.getChannelData(0);
-        const step = Math.ceil(data.length / waveformCanvas.width);
-        const amp = waveformCanvas.height / 2;
-        ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
-        ctx.beginPath();
-        for (let i = 0; i < waveformCanvas.width; i++) {
-          const min = 1 + step * i;
-          const max = 1 + step * i + step;
-          let minVal = 0;
-          let maxVal = 0;
-          for (let j = min; j < max; j++) {
-            if (data[j] < minVal) minVal = data[j];
-            if (data[j] > maxVal) maxVal = data[j];
-          }
-          const x = i;
-          const y = (1 + minVal) * amp;
-          const height = Math.max(1, (maxVal - minVal) * amp);
-          ctx.strokeStyle = "#000";
-          ctx.lineWidth = 1;
-          ctx.moveTo(x, y);
-          ctx.lineTo(x, y + height);
-        }
-        ctx.stroke();
-      };
-
-      playButton.addEventListener("click", () => {
-        if (!audioBuffer) return;
-        var duration = Number(durNumbox.value);
-        var source = audioContext.createBufferSource();
-        var gain = audioContext.createGain();
-        source.buffer = audioBuffer;
-        source.connect(gain);
-        source.loop = loopCheckbox.checked;
-        source.playbackRate.value = 1 + deltaX / 100;
-        gain.connect(audioContext.destination);
-        gain.connect(mediaStreamDestination);
-        const attackTime = duration * 0.25;
-        const releaseTime = duration * 0.25;
-        const sustainLevel = 1;
-        const currentTime = audioContext.currentTime;
-        gain.gain.setValueAtTime(0, currentTime);
-        gain.gain.linearRampToValueAtTime(sustainLevel, currentTime + attackTime);
-        gain.gain.setValueAtTime(sustainLevel, currentTime + duration - releaseTime);
-        gain.gain.linearRampToValueAtTime(0, currentTime + duration);
-        if (sources.length > 0 && !polyCheckbox.checked) {
-          for (var src of sources) src.source.stop();
-          sources = sources.slice(0, 1);
-          sources[0].source = source;
-          sources[0].gain = gain;
-          sources[0].startTime = audioContext.currentTime;
-          sources[0].startOffset = 0;
-        } else {
-          while (sources.length > Number(voicesNumbox.value)) {
-            sources[0].source.stop();
-            sources = sources.slice(1, voicesNumbox.value);
-          }
-          sources.push({
-            source: source,
-            gain: gain,
-            startTime: audioContext.currentTime,
-            startOffset: 0,
-            color: colors[colorIndex++ % colors.length],
-            duration: duration,
-          });
-        }
-        sources.at(-1).source.start(0, 0, duration);
-        cancelAnimationFrame(animationId);
-        drawPlayhead();
-      });
-
-      clearButton.addEventListener("click", () => {
-        if (!audioBuffer) return;
+        const bufferLength = audioContext.sampleRate * 0.02; // for 100 ms of audio
+        waveformCanvas.width = bufferLength;
         audioBuffer = audioContext.createBuffer(
           2,
           bufferLength,
           audioContext.sampleRate
         );
-        drawWaveform();
-        fileInput.value = "";
-      });
 
-      voicesNumbox.addEventListener("change", () => {
-        while (sources.length > voicesNumbox.value) {
-          sources[0].source.stop();
-          sources = sources.slice(1);
+        let recordingStartTime;
+        let recordingInterval;
+        let accumulatedRecordingTime = 0;
+
+        const mediaStreamDestination =
+          audioContext.createMediaStreamDestination();
+        let mediaRecorder;
+        try {
+          mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, {
+            mimeType: "audio/webm",
+          });
+        } catch (NotSupportedError) {
+          mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, {
+            mimeType: "video/mp4",
+          });
         }
-      });
+        let recordedChunks = [];
 
-      function resetPlayback(x) {
-        if (!audioBuffer) return;
-        deltaX = x - lastX;
-        deltaTime = audioContext.currentTime - lastTime;
-        var rate = calculatePlaybackRate(deltaX, deltaTime);
-        rate = isFinite(rate) ? Math.abs(rate) : 1;
-        var duration = Number(durNumbox.value);
-        var source = audioContext.createBufferSource();
-        var gain = audioContext.createGain();
-        source.buffer = audioBuffer;
-        source.connect(gain);
-        if (x < 0) x = 0;
-        else if (x > waveformCanvas.width) x = waveformCanvas.width - 1;
-        var startOffset = (x * audioBuffer.duration) / waveformCanvas.width;
-        source.loop = loopCheckbox.checked;
-        source.playbackRate.value = rate;
-        gain.connect(audioContext.destination);
-        gain.connect(mediaStreamDestination);
-        const attackTime = duration * 0.25;
-        const releaseTime = duration * 0.25;
-        const sustainLevel = 1;
-        const currentTime = audioContext.currentTime;
-        gain.gain.setValueAtTime(0, currentTime);
-        gain.gain.linearRampToValueAtTime(sustainLevel, currentTime + attackTime);
-        gain.gain.setValueAtTime(sustainLevel, currentTime + duration - releaseTime);
-        gain.gain.linearRampToValueAtTime(0, currentTime + duration);
-        if (sources.length > 0 && !polyCheckbox.checked) {
-          for (var src of sources) src.source.stop();
-          sources = sources.slice(0, 1);
-          sources[0].source = source;
-          sources[0].gain = gain;
-          sources[0].startTime = audioContext.currentTime;
-          sources[0].startOffset = startOffset;
-        } else {
+        mediaRecorder.ondataavailable = (event) => {
+          recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = function () {
+          const blob = new Blob(recordedChunks, { type: "audio/webm" });
+          const url = URL.createObjectURL(blob);
+          console.log(
+            `Recording stopped. Current blob size: ${blob.size} bytes`
+          );
+        };
+
+        const updateRecordingTime = () => {
+          const currentTime = Date.now();
+          const elapsedTime =
+            accumulatedRecordingTime + (currentTime - recordingStartTime);
+          const seconds = Math.floor((elapsedTime / 1000) % 60);
+          const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+          const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+
+          const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+          const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+          const formattedHours = hours < 10 ? `0${hours}` : hours;
+
+          document.getElementById(
+            "recordingTime"
+          ).textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+        };
+
+        fileInput.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          const arrayBuffer = await readFile(file);
+          audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+          drawWaveform();
+        });
+
+        const readFile = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+          });
+        };
+
+        const drawWaveform = () => {
+          const data = audioBuffer.getChannelData(0);
+          const step = Math.ceil(data.length / waveformCanvas.width);
+          const amp = waveformCanvas.height / 2;
+          ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+          ctx.beginPath();
+          for (let i = 0; i < waveformCanvas.width; i++) {
+            const min = 1 + step * i;
+            const max = 1 + step * i + step;
+            let minVal = 0;
+            let maxVal = 0;
+            for (let j = min; j < max; j++) {
+              if (data[j] < minVal) minVal = data[j];
+              if (data[j] > maxVal) maxVal = data[j];
+            }
+            const x = i;
+            const y = (1 + minVal) * amp;
+            const height = Math.max(1, (maxVal - minVal) * amp);
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 1;
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + height);
+          }
+          ctx.stroke();
+        };
+
+        playButton.addEventListener("click", () => {
+          if (!audioBuffer) return;
+          var duration = Number(durNumbox.value);
+          var source = audioContext.createBufferSource();
+          var gain = audioContext.createGain();
+          source.buffer = audioBuffer;
+          source.connect(gain);
+          source.loop = loopCheckbox.checked;
+          source.playbackRate.value = 1 + deltaX / 100;
+          gain.connect(audioContext.destination);
+          gain.connect(mediaStreamDestination);
+          const attackTime = duration * 0.25;
+          const releaseTime = duration * 0.25;
+          const sustainLevel = 1;
+          const currentTime = audioContext.currentTime;
+          gain.gain.setValueAtTime(0, currentTime);
+          gain.gain.linearRampToValueAtTime(
+            sustainLevel,
+            currentTime + attackTime
+          );
+          gain.gain.setValueAtTime(
+            sustainLevel,
+            currentTime + duration - releaseTime
+          );
+          gain.gain.linearRampToValueAtTime(0, currentTime + duration);
+          if (sources.length > 0 && !polyCheckbox.checked) {
+            for (var src of sources) src.source.stop();
+            sources = sources.slice(0, 1);
+            sources[0].source = source;
+            sources[0].gain = gain;
+            sources[0].startTime = audioContext.currentTime;
+            sources[0].startOffset = 0;
+          } else {
+            while (sources.length > Number(voicesNumbox.value)) {
+              sources[0].source.stop();
+              sources = sources.slice(1, voicesNumbox.value);
+            }
+            sources.push({
+              source: source,
+              gain: gain,
+              startTime: audioContext.currentTime,
+              startOffset: 0,
+              color: colors[colorIndex++ % colors.length],
+              duration: duration,
+            });
+          }
+          sources.at(-1).source.start(0, 0, duration);
+          cancelAnimationFrame(animationId);
+          drawPlayhead();
+        });
+
+        clearButton.addEventListener("click", () => {
+          if (!audioBuffer) return;
+          audioBuffer = audioContext.createBuffer(
+            2,
+            bufferLength,
+            audioContext.sampleRate
+          );
+          drawWaveform();
+          fileInput.value = "";
+        });
+
+        voicesNumbox.addEventListener("change", () => {
+          while (sources.length > voicesNumbox.value) {
+            sources[0].source.stop();
+            sources = sources.slice(1);
+          }
+        });
+
+        function resetPlayback(x) {
+          if (!audioBuffer) return;
+          deltaX = x - lastX;
+          deltaTime = audioContext.currentTime - lastTime;
+          var rate = calculatePlaybackRate(deltaX, deltaTime);
+          rate = isFinite(rate) ? Math.abs(rate) : 1;
+          var duration = Number(durNumbox.value);
+          var source = audioContext.createBufferSource();
+          var gain = audioContext.createGain();
+          source.buffer = audioBuffer;
+          source.connect(gain);
+          if (x < 0) x = 0;
+          else if (x > waveformCanvas.width) x = waveformCanvas.width - 1;
+          var startOffset = (x * audioBuffer.duration) / waveformCanvas.width;
+          source.loop = loopCheckbox.checked;
+          source.playbackRate.value = rate;
+          gain.connect(audioContext.destination);
+          gain.connect(mediaStreamDestination);
+          const attackTime = duration * 0.25;
+          const releaseTime = duration * 0.25;
+          const sustainLevel = 1;
+          const currentTime = audioContext.currentTime;
+          gain.gain.setValueAtTime(0, currentTime);
+          gain.gain.linearRampToValueAtTime(
+            sustainLevel,
+            currentTime + attackTime
+          );
+          gain.gain.setValueAtTime(
+            sustainLevel,
+            currentTime + duration - releaseTime
+          );
+          gain.gain.linearRampToValueAtTime(0, currentTime + duration);
+          if (sources.length > 0 && !polyCheckbox.checked) {
+            for (var src of sources) src.source.stop();
+            sources = sources.slice(0, 1);
+            sources[0].source = source;
+            sources[0].gain = gain;
+            sources[0].startTime = audioContext.currentTime;
+            sources[0].startOffset = startOffset;
+          } else {
+            while (sources.length > Number(voicesNumbox.value)) {
+              sources[0].source.stop();
+              sources = sources.slice(1);
+            }
+            sources.push({
+              source: source,
+              gain: gain,
+              startTime: audioContext.currentTime,
+              startOffset: startOffset,
+              color: colors[colorIndex++ % colors.length],
+              duration: Number(durNumbox.value),
+            });
+          }
+          sources.at(-1).source.start(0, startOffset, Number(durNumbox.value));
+          cancelAnimationFrame(animationId);
+          drawPlayhead();
+          lastX = x;
+          lastTime = audioContext.currentTime;
+        }
+
+        const drawPlayhead = () => {
+          if (!audioContext || sources.length === 0) return;
+
+          ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+          drawWaveform();
+
+          sources.forEach((src) => {
+            if (src == null) return;
+            let playbackTime =
+              audioContext.currentTime - src.startTime + src.startOffset;
+            if (audioContext.currentTime - src.startTime > src.duration) {
+              src.source.stop();
+              sources = sources.filter((s) => s !== src);
+            }
+            if (src.source.loop) {
+              playbackTime = playbackTime % audioBuffer.duration;
+            }
+            const position =
+              (playbackTime / audioBuffer.duration) * waveformCanvas.width;
+            ctx.fillStyle = src.color;
+            ctx.fillRect(position, 0, 1, waveformCanvas.height);
+          });
+
+          animationId = requestAnimationFrame(drawPlayhead);
+        };
+
+        function getEventPosition(event) {
+          if (event.touches) {
+            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+          } else {
+            return { x: event.offsetX, y: event.offsetY };
+          }
+        }
+
+        waveformCanvas.addEventListener("mousedown", handleStart);
+        waveformCanvas.addEventListener("touchstart", handleStart);
+
+        function handleStart(event) {
+          event.preventDefault(); // Prevents additional mouse events in touch environments
+          if (drawCheckbox.checked) {
+            isDrawing = true;
+            drawOnWaveform(event);
+          }
+          isMouseDown = true;
+        }
+
+        waveformCanvas.addEventListener("mousemove", handleMove);
+        waveformCanvas.addEventListener("touchmove", handleMove);
+
+        function handleMove(event) {
+          event.preventDefault(); // Prevent scrolling when touching inside the canvas
+          if (isDrawing || isMouseDown) {
+            const { x, y } = getEventPosition(event);
+            if (isDrawing) {
+              drawOnWaveform(x, y);
+            } else {
+              resetPlayback(x);
+            }
+          }
+        }
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
+
+        function handleEnd() {
+          if (isDrawing) {
+            isDrawing = false;
+            lastDrawnSampleIndex = null;
+          }
+          isMouseDown = false;
+        }
+
+        function calculatePlaybackRate(deltaX, deltaTime) {
+          const canvasWidth = waveformCanvas.width;
+          const bufferDuration = audioBuffer.duration;
+          const dragDurationInSeconds = (deltaX / canvasWidth) * bufferDuration;
+          return dragDurationInSeconds / deltaTime;
+        }
+
+        window.addEventListener("keydown", (event) => {
+          let mappedKeys = [
+            "c",
+            "v",
+            "z",
+            "x",
+            " ",
+            "Shift",
+            "Alt",
+            "Meta",
+            "d",
+            "f",
+          ];
+          if (
+            mappedKeys.includes(event.key) ||
+            mappedKeys.includes(event.key.toLowerCase())
+          )
+            event.preventDefault();
+          if (event.key.toLowerCase() == "d") startRecording();
+          if (event.key.toLowerCase() == "f") {
+            stopRecording();
+            replaceRecording();
+          }
+          if (event.key == " ") playButton.click();
+          if (event.key == "Shift") loopCheckbox.checked = true;
+          if (event.key == "Alt") drawCheckbox.checked = true;
+          if (event.key == "Meta" || event.key == "Control")
+            polyCheckbox.checked = true;
+          let dur = Number(durNumbox.value);
+          if (event.key.toLowerCase() == "v")
+            durNumbox.value = (dur + 0.005).toFixed(3);
+          else if (event.key.toLowerCase() == "c")
+            durNumbox.value = dur > 0.005 ? (dur - 0.005).toFixed(3) : dur;
+          let vcs = Number(voicesNumbox.value);
+          if (event.key.toLowerCase() == "x") voicesNumbox.value = vcs + 1;
+          else if (event.key.toLowerCase() == "z")
+            voicesNumbox.value = vcs > 1 ? vcs - 1 : vcs;
           while (sources.length > Number(voicesNumbox.value)) {
             sources[0].source.stop();
             sources = sources.slice(1);
           }
-          sources.push({
-            source: source,
-            gain: gain,
-            startTime: audioContext.currentTime,
-            startOffset: startOffset,
-            color: colors[colorIndex++ % colors.length],
-            duration: Number(durNumbox.value),
-          });
-        }
-        sources.at(-1).source.start(0, startOffset, Number(durNumbox.value));
-        cancelAnimationFrame(animationId);
-        drawPlayhead();
-        lastX = x;
-        lastTime = audioContext.currentTime;
-      }
-
-      const drawPlayhead = () => {
-        if (!audioContext || sources.length === 0) return;
-
-        ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
-        drawWaveform();
-
-        sources.forEach((src) => {
-          if (src == null) return;
-          let playbackTime =
-            audioContext.currentTime - src.startTime + src.startOffset;
-          if (audioContext.currentTime - src.startTime > src.duration) {
-            src.source.stop();
-            sources = sources.filter((s) => s !== src);
-          }
-          if (src.source.loop) {
-            playbackTime = playbackTime % audioBuffer.duration;
-          }
-          const position =
-            (playbackTime / audioBuffer.duration) * waveformCanvas.width;
-          ctx.fillStyle = src.color;
-          ctx.fillRect(position, 0, 1, waveformCanvas.height);
         });
 
-        animationId = requestAnimationFrame(drawPlayhead);
-      };
+        window.addEventListener("keyup", (event) => {
+          if (event.key.toLowerCase() == "d") stopRecording();
+          if (event.key == "Shift") loopCheckbox.checked = false;
+          if (event.key == "Alt") drawCheckbox.checked = false;
+          if (event.key == "Meta" || event.key == "Control")
+            polyCheckbox.checked = false;
+        });
 
-      function getEventPosition(event) {
-        if (event.touches) {
-          return { x: event.touches[0].clientX, y: event.touches[0].clientY };
-        } else {
-          return { x: event.offsetX, y: event.offsetY };
+        function pixToSamp(x, canvasWidth) {
+          x /= canvasWidth;
+          x *= audioBuffer.length;
+          return Math.floor(x);
         }
-      }
 
-      waveformCanvas.addEventListener("mousedown", handleStart);
-      waveformCanvas.addEventListener("touchstart", handleStart);
-
-      function handleStart(event) {
-        event.preventDefault(); // Prevents additional mouse events in touch environments
-        if (drawCheckbox.checked) {
-          isDrawing = true;
-          drawOnWaveform(event);
+        function drawOnWaveform(x, y) {
+          const rect = waveformCanvas.getBoundingClientRect();
+          const canvasWidth = waveformCanvas.width;
+          const canvasHeight = waveformCanvas.height;
+          const sampleIndex = pixToSamp(x, canvasWidth);
+          if (sampleIndex === lastDrawnSampleIndex) return;
+          lastDrawnSampleIndex = sampleIndex;
+          const amplitude = -1 * (1 - (y / canvasHeight) * 2);
+          let channels = []; // same for all chanenls for now
+          for (var i = 0; i < audioBuffer.numberOfChannels; i++)
+            channels.push(audioBuffer.getChannelData(i));
+          for (let channel of channels) {
+            channel[sampleIndex] = amplitude;
+          }
+          drawWaveform();
         }
-        isMouseDown = true;
-      }
 
-      waveformCanvas.addEventListener("mousemove", handleMove);
-      waveformCanvas.addEventListener("touchmove", handleMove);
+        function startRecording() {
+          if (mediaRecorder.state !== "recording") {
+            mediaRecorder.start();
+            recordingStartTime = Date.now();
+            if (!recordingInterval) {
+              recordingInterval = setInterval(updateRecordingTime, 1000);
+            }
+          }
+        }
 
-      function handleMove(event) {
-        event.preventDefault(); // Prevent scrolling when touching inside the canvas
-        if (isDrawing || isMouseDown) {
-          const { x, y } = getEventPosition(event);
-          if (isDrawing) {
-            drawOnWaveform(x, y);
+        function stopRecording() {
+          if (mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            accumulatedRecordingTime += Date.now() - recordingStartTime;
+            clearInterval(recordingInterval);
+            recordingInterval = null; // Clear the interval reference
+          }
+        }
+
+        function replaceRecording() {
+          if (recordedChunks.length > 0) {
+            const blob = new Blob(recordedChunks, { type: "audio/webm" });
+            const url = URL.createObjectURL(blob); // This can be useful for downloading or streaming
+            const fileReader = new FileReader();
+            fileReader.onload = async (event) => {
+              audioBuffer = await audioContext.decodeAudioData(
+                event.target.result
+              );
+              drawWaveform();
+              URL.revokeObjectURL(url); // Clean up URL object
+            };
+            fileReader.readAsArrayBuffer(blob);
+            // Reset recording-related states
+            accumulatedRecordingTime = 0;
+            document.getElementById("recordingTime").textContent = "00:00:00";
+            recordedChunks = []; // Clear recorded chunks to start fresh
           } else {
-            resetPlayback(x);
+            console.log("No recording data available to replace with");
           }
         }
-      }
 
-      window.addEventListener("mouseup", handleEnd);
-      window.addEventListener("touchend", handleEnd);
+        startRecordButton.addEventListener("click", () => {
+          startRecording();
+        });
 
-      function handleEnd() {
-        if (isDrawing) {
-          isDrawing = false;
-          lastDrawnSampleIndex = null;
-        }
-        isMouseDown = false;
-      }
-
-      function calculatePlaybackRate(deltaX, deltaTime) {
-        const canvasWidth = waveformCanvas.width;
-        const bufferDuration = audioBuffer.duration;
-        const dragDurationInSeconds = (deltaX / canvasWidth) * bufferDuration;
-        return dragDurationInSeconds / deltaTime;
-      }
-
-      window.addEventListener("keydown", (event) => {
-        let mappedKeys = ["c", "v", "z", "x", " ", "Shift", "Alt", "Meta", "d", "f"];
-        if (mappedKeys.includes(event.key) || mappedKeys.includes(event.key.toLowerCase()))
-          event.preventDefault();
-        if (event.key.toLowerCase() == "d") startRecording();
-        if (event.key.toLowerCase() == "f") {
+        stopRecordButton.addEventListener("click", () => {
           stopRecording();
-          replaceRecording()
-        };
-        if (event.key == " ") playButton.click();
-        if (event.key == "Shift") loopCheckbox.checked = true;
-        if (event.key == "Alt") drawCheckbox.checked = true;
-        if (event.key == "Meta" || event.key == "Control")
-          polyCheckbox.checked = true;
-        let dur = Number(durNumbox.value);
-        if (event.key.toLowerCase() == "v") durNumbox.value = (dur + 0.005).toFixed(3);
-        else if (event.key.toLowerCase() == "c")
-          durNumbox.value = dur > 0.005 ? (dur - 0.005).toFixed(3) : dur;
-        let vcs = Number(voicesNumbox.value);
-        if (event.key.toLowerCase() == "x") voicesNumbox.value = vcs + 1;
-        else if (event.key.toLowerCase() == "z")
-          voicesNumbox.value = vcs > 1 ? vcs - 1 : vcs;
-        while (sources.length > Number(voicesNumbox.value)) {
-          sources[0].source.stop();
-          sources = sources.slice(1);
-        }
-      });
+        });
 
-      window.addEventListener("keyup", (event) => {
-        if (event.key.toLowerCase() == "d") stopRecording();
-        if (event.key == "Shift") loopCheckbox.checked = false;
-        if (event.key == "Alt") drawCheckbox.checked = false;
-        if (event.key == "Meta" || event.key == "Control")
-          polyCheckbox.checked = false;
-      });
-
-      function pixToSamp(x, canvasWidth) {
-        x /= canvasWidth;
-        x *= audioBuffer.length;
-        return Math.floor(x);
-      }
-
-      function drawOnWaveform(x, y) {
-        const rect = waveformCanvas.getBoundingClientRect();
-        const canvasWidth = waveformCanvas.width;
-        const canvasHeight = waveformCanvas.height;
-        const sampleIndex = pixToSamp(x, canvasWidth);
-        if (sampleIndex === lastDrawnSampleIndex) return;
-        lastDrawnSampleIndex = sampleIndex;
-        const amplitude = -1 * (1 - (y / canvasHeight) * 2);
-        let channels = []; // same for all chanenls for now
-        for (var i = 0; i < audioBuffer.numberOfChannels; i++)
-          channels.push(audioBuffer.getChannelData(i));
-        for (let channel of channels) {
-          channel[sampleIndex] = amplitude;
-        }
-        drawWaveform();
-      }
-
-      function startRecording() {
-        if (mediaRecorder.state !== 'recording') {
-          mediaRecorder.start();
-          recordingStartTime = Date.now();
-          if (!recordingInterval) {
-            recordingInterval = setInterval(updateRecordingTime, 1000);
-          }
-        }
-      }
-
-      function stopRecording() {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-          accumulatedRecordingTime += Date.now() - recordingStartTime;
+        saveRecordButton.addEventListener("click", () => {
+          const blob = new Blob(recordedChunks, { type: "audio/wav" });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = "recording.wav";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          recordedChunks = [];
           clearInterval(recordingInterval);
-          recordingInterval = null; // Clear the interval reference
-        }
-      }
+          document.getElementById("recordingTime").textContent = "00:00:00";
+          accumulatedRecordingTime = 0; // Reset accumulated time
+        });
 
-      function replaceRecording() {
-        if (recordedChunks.length > 0) {
-          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-          const url = URL.createObjectURL(blob); // This can be useful for downloading or streaming
-          const fileReader = new FileReader();
-          fileReader.onload = async (event) => {
-            audioBuffer = await audioContext.decodeAudioData(event.target.result);
-            drawWaveform();
-            URL.revokeObjectURL(url); // Clean up URL object
-          };
-          fileReader.readAsArrayBuffer(blob);
-          // Reset recording-related states
-          accumulatedRecordingTime = 0;
-          document.getElementById('recordingTime').textContent = '00:00:00';
-          recordedChunks = []; // Clear recorded chunks to start fresh
-        } else {
-          console.log('No recording data available to replace with');
-        }
-      }
-
-      startRecordButton.addEventListener('click', () => {
-        startRecording();
-      });
-
-      stopRecordButton.addEventListener('click', () => {
-        stopRecording();
-      });
-
-      saveRecordButton.addEventListener('click', () => {
-        const blob = new Blob(recordedChunks, { type: 'audio/wav' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'recording.wav';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        recordedChunks = [];
-        clearInterval(recordingInterval);
-        document.getElementById('recordingTime').textContent = '00:00:00';
-        accumulatedRecordingTime = 0; // Reset accumulated time
-      });
-
-      replaceRecordButton.addEventListener('click', () => {
-        replaceRecording();
-      });
-
-    };
-  </script>
-</body>
-
+        replaceRecordButton.addEventListener("click", () => {
+          replaceRecording();
+        });
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs@2/webcomponents-loader.min.js"></script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@1/src/zero-md.min.js"
+    ></script>
+    <br />
+    <br />
+    <zero-md src="README.md"></zero-md>
+  </body>
 </html>
