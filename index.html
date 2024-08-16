@@ -40,11 +40,7 @@
     <br />
     <br />
     <label>Record:</label>
-    <button id="startRecordButton">Start</button>
-    <button id="stopRecordButton">Stop</button>
-    <button id="saveRecordButton">Save</button>
-    <button id="replaceRecordButton">Replace</button>
-    <span id="recordingTime">00:00:00</span>
+    <button id="recordButton">Start recording</button>
 
     <script>
       const colors = Array.from(
@@ -61,12 +57,7 @@
         const clearButton = document.getElementById("clearButton");
         const voicesNumbox = document.getElementById("voicesNumbox");
         const durNumbox = document.getElementById("durNumbox");
-        const startRecordButton = document.getElementById("startRecordButton");
-        const stopRecordButton = document.getElementById("stopRecordButton");
-        const saveRecordButton = document.getElementById("saveRecordButton");
-        const replaceRecordButton = document.getElementById(
-          "replaceRecordButton"
-        );
+        const recordButton = document.getElementById("recordButton");
         const ctx = waveformCanvas.getContext("2d");
 
         let audioContext = new AudioContext();
@@ -94,31 +85,9 @@
         let recordingInterval;
         let accumulatedRecordingTime = 0;
 
-        const mediaStreamDestination =
-          audioContext.createMediaStreamDestination();
         let mediaRecorder;
-        try {
-          mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, {
-            mimeType: "audio/webm",
-          });
-        } catch (NotSupportedError) {
-          mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, {
-            mimeType: "video/mp4",
-          });
-        }
         let recordedChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          recordedChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = function () {
-          const blob = new Blob(recordedChunks, { type: "audio/webm" });
-          const url = URL.createObjectURL(blob);
-          console.log(
-            `Recording stopped. Current blob size: ${blob.size} bytes`
-          );
-        };
+        let isRecording = false;
 
         const updateRecordingTime = () => {
           const currentTime = Date.now();
@@ -189,7 +158,6 @@
           source.loop = loopCheckbox.checked;
           source.playbackRate.value = 1 + deltaX / 100;
           gain.connect(audioContext.destination);
-          gain.connect(mediaStreamDestination);
           const attackTime = duration * 0.25;
           const releaseTime = duration * 0.25;
           const sustainLevel = 1;
@@ -265,7 +233,6 @@
           source.loop = loopCheckbox.checked;
           source.playbackRate.value = rate;
           gain.connect(audioContext.destination);
-          gain.connect(mediaStreamDestination);
           const attackTime = duration * 0.25;
           const releaseTime = duration * 0.25;
           const sustainLevel = 1;
@@ -405,11 +372,6 @@
             mappedKeys.includes(event.key.toLowerCase())
           )
             event.preventDefault();
-          if (event.key.toLowerCase() == "d") startRecording();
-          if (event.key.toLowerCase() == "f") {
-            stopRecording();
-            replaceRecording();
-          }
           if (event.key == " ") playButton.click();
           if (event.key == "Shift") loopCheckbox.checked = true;
           if (event.key == "Alt") drawCheckbox.checked = true;
@@ -431,7 +393,6 @@
         });
 
         window.addEventListener("keyup", (event) => {
-          if (event.key.toLowerCase() == "d") stopRecording();
           if (event.key == "Shift") loopCheckbox.checked = false;
           if (event.key == "Alt") drawCheckbox.checked = false;
           if (event.key == "Meta" || event.key == "Control")
@@ -461,73 +422,46 @@
           drawWaveform();
         }
 
-        function startRecording() {
-          if (mediaRecorder.state !== "recording") {
-            mediaRecorder.start();
-            recordingStartTime = Date.now();
-            if (!recordingInterval) {
-              recordingInterval = setInterval(updateRecordingTime, 1000);
-            }
+        async function toggleRecording() {
+          if (!isRecording) {
+            await startRecording();
+          } else {
+            stopRecording();
           }
+        }
+
+        async function startRecording() {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          mediaRecorder = new MediaRecorder(stream);
+          const chunks = [];
+
+          mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+            audioBuffer = await audioContext.decodeAudioData(
+              await blob.arrayBuffer()
+            );
+            drawWaveform(audioBuffer);
+            playButton.disabled = false;
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          recordButton.textContent = "Stop Recording";
         }
 
         function stopRecording() {
-          if (mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-            accumulatedRecordingTime += Date.now() - recordingStartTime;
-            clearInterval(recordingInterval);
-            recordingInterval = null; // Clear the interval reference
-          }
+          mediaRecorder.stop();
+          isRecording = false;
+          recordButton.textContent = "Start Recording";
         }
 
-        function replaceRecording() {
-          if (recordedChunks.length > 0) {
-            const blob = new Blob(recordedChunks, { type: "audio/webm" });
-            const url = URL.createObjectURL(blob); // This can be useful for downloading or streaming
-            const fileReader = new FileReader();
-            fileReader.onload = async (event) => {
-              audioBuffer = await audioContext.decodeAudioData(
-                event.target.result
-              );
-              drawWaveform();
-              URL.revokeObjectURL(url); // Clean up URL object
-            };
-            fileReader.readAsArrayBuffer(blob);
-            // Reset recording-related states
-            accumulatedRecordingTime = 0;
-            document.getElementById("recordingTime").textContent = "00:00:00";
-            recordedChunks = []; // Clear recorded chunks to start fresh
-          } else {
-            console.log("No recording data available to replace with");
-          }
-        }
-
-        startRecordButton.addEventListener("click", () => {
-          startRecording();
-        });
-
-        stopRecordButton.addEventListener("click", () => {
-          stopRecording();
-        });
-
-        saveRecordButton.addEventListener("click", () => {
-          const blob = new Blob(recordedChunks, { type: "audio/wav" });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "recording.wav";
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          recordedChunks = [];
-          clearInterval(recordingInterval);
-          document.getElementById("recordingTime").textContent = "00:00:00";
-          accumulatedRecordingTime = 0; // Reset accumulated time
-        });
-
-        replaceRecordButton.addEventListener("click", () => {
-          replaceRecording();
+        recordButton.addEventListener("click", () => {
+          toggleRecording();
         });
       };
     </script>
