@@ -44,7 +44,7 @@
     <label>Resample:</label>
     <button id="resampleButton">Start</button>
     <button id="swapResampledButton">Swap</button>
-    <span id="resampledTime">00:00:00</span>
+    <span id="resampledTime">00:00:00:000</span>
 
     <script>
       const colors = Array.from(
@@ -90,12 +90,69 @@
           audioContext.sampleRate
         );
 
+        let recorder;
+        let isRecording = false;
+
+        let isResampling = false;
         let resamplingStartTime;
         let resamplingInterval;
         let accumulatedResampledTime = 0;
 
-        let recorder;
-        let isRecording = false;
+        let resampledChunks = [];
+        let resampler;
+        let resamplingStreamDestination;
+
+        function initializeResampler() {
+          if (!resamplingStreamDestination) {
+            resamplingStreamDestination =
+              audioContext.createMediaStreamDestination();
+          }
+
+          try {
+            resampler = new MediaRecorder(resamplingStreamDestination.stream, {
+              mimeType: "audio/webm",
+            });
+          } catch (NotSupportedError) {
+            resampler = new MediaRecorder(resamplingStreamDestination.stream, {
+              mimeType: "video/mp4",
+            });
+          }
+
+          resampler.ondataavailable = (event) => {
+            resampledChunks.push(event.data);
+          };
+
+          resampler.onstop = function () {
+            const blob = new Blob(resampledChunks, { type: "audio/webm" });
+            console.log(
+              `Resampling stopped. Current blob size: ${blob.size} bytes`
+            );
+          };
+        }
+
+        const updateResamplingTime = () => {
+          const currentTime = Date.now();
+          const elapsedTime =
+            accumulatedResampledTime + (currentTime - resamplingStartTime);
+          const miliseconds = Math.floor(elapsedTime % 1000);
+          const seconds = Math.floor((elapsedTime / 1000) % 60);
+          const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+          const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+
+          const formattedMiliseconds =
+            miliseconds < 10
+              ? `00${miliseconds}`
+              : miliseconds < 100
+              ? `0${miliseconds}`
+              : `${miliseconds}`;
+          const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+          const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+          const formattedHours = hours < 10 ? `0${hours}` : hours;
+
+          document.getElementById(
+            "resampledTime"
+          ).textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}:${formattedMiliseconds}`;
+        };
 
         fileInput.addEventListener("change", async (event) => {
           const file = event.target.files[0];
@@ -148,6 +205,8 @@
           source.connect(gain);
           source.loop = loopCheckbox.checked;
           source.playbackRate.value = 1 + deltaX / 100;
+          if (resamplingStreamDestination)
+            gain.connect(resamplingStreamDestination);
           gain.connect(audioContext.destination);
           const attackTime = duration * 0.25;
           const releaseTime = duration * 0.25;
@@ -232,6 +291,8 @@
           source.loop = loopCheckbox.checked;
           source.playbackRate.value = rate;
           gain.connect(audioContext.destination);
+          if (resamplingStreamDestination)
+            gain.connect(resamplingStreamDestination);
           const attackTime = duration * 0.25;
           const releaseTime = duration * 0.25;
           const sustainLevel = 1;
@@ -436,8 +497,6 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
           });
-          audioContext = new (window.AudioContext ||
-            window.webkitAudioContext)();
           recorder = new MediaRecorder(stream);
           const chunks = [];
 
@@ -464,6 +523,69 @@
 
         recordButton.addEventListener("click", () => {
           toggleRecording();
+        });
+
+        async function toggleResampling() {
+          if (!isResampling) {
+            await startResampling();
+            document.getElementById("resampleButton").textContent = "Stop";
+          } else {
+            stopResampling();
+            document.getElementById("resampleButton").textContent = "Start";
+          }
+        }
+
+        function startResampling() {
+          initializeResampler(); // Initialize resampler with current AudioContext
+          if (resampler.state !== "recording") {
+            resampler.start();
+            resamplingStartTime = Date.now();
+            if (!resamplingInterval) {
+              resamplingInterval = setInterval(updateResamplingTime, 10);
+            }
+            isResampling = true;
+          }
+        }
+
+        function stopResampling() {
+          if (resampler.state === "recording") {
+            resampler.stop();
+            accumulatedResampledTime += Date.now() - resamplingStartTime;
+            clearInterval(resamplingInterval);
+            resamplingInterval = null; // Clear the interval reference
+            isResampling = false;
+          }
+        }
+
+        function swapResampled() {
+          if (resampledChunks.length > 0) {
+            const blob = new Blob(resampledChunks, { type: "audio/webm" });
+            const url = URL.createObjectURL(blob); // This can be useful for downloading or streaming
+            const fileReader = new FileReader();
+            fileReader.onload = async (event) => {
+              audioBuffer = await audioContext.decodeAudioData(
+                event.target.result
+              );
+              drawWaveform();
+              URL.revokeObjectURL(url); // Clean up URL object
+            };
+            fileReader.readAsArrayBuffer(blob);
+            // Reset resampling-related states
+            accumulatedResampledTime = 0;
+            document.getElementById("resampledTime").textContent =
+              "00:00:00:00";
+            resampledChunks = []; // Clear recorded chunks to start fresh
+          } else {
+            console.log("No resampled data available to replace with");
+          }
+        }
+
+        resampleButton.addEventListener("click", () => {
+          toggleResampling();
+        });
+
+        swapResampledButton.addEventListener("click", () => {
+          swapResampled();
         });
       };
     </script>
