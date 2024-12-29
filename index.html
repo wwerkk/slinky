@@ -343,8 +343,7 @@
             "Shift",
             "Alt",
             "Meta",
-            "d",
-            "f",
+            "r",
           ];
           if (
             mappedKeys.includes(event.key) ||
@@ -369,6 +368,7 @@
             sources[0].source.stop();
             sources = sources.slice(1);
           }
+          if (event.key.toLowerCase() == "r") startRecording();
         });
 
         window.addEventListener("keyup", (event) => {
@@ -376,6 +376,7 @@
           if (event.key == "Alt") drawCheckbox.checked = false;
           if (event.key == "Meta" || event.key == "Control")
             polyCheckbox.checked = false;
+          if (event.key.toLowerCase() == "r") stopRecording();
         });
 
         function pixToSamp(x, canvasWidth) {

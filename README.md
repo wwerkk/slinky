@@ -11,5 +11,4 @@
 - Z/X - adjust number of voices (polyphonic mode only)
 
 
-- D (hold) - record
-- F - replace current waveform with recorded
+- R (hold) - record from input (replaces current waveform at release)
