@@ -81,30 +81,9 @@
           audioContext.sampleRate
         );
 
-        let recordingStartTime;
-        let recordingInterval;
-        let accumulatedRecordingTime = 0;
-
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
-
-        const updateRecordingTime = () => {
-          const currentTime = Date.now();
-          const elapsedTime =
-            accumulatedRecordingTime + (currentTime - recordingStartTime);
-          const seconds = Math.floor((elapsedTime / 1000) % 60);
-          const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
-          const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
-
-          const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-          const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-          const formattedHours = hours < 10 ? `0${hours}` : hours;
-
-          document.getElementById(
-            "recordingTime"
-          ).textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-        };
 
         fileInput.addEventListener("change", async (event) => {
           const file = event.target.files[0];
