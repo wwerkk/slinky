@@ -40,6 +40,12 @@
       step="0.005"
     />
     <br />
+    <br />
+    <label>Resample:</label>
+    <button id="resampleButton">Start</button>
+    <button id="swapResampledButton">Swap</button>
+    <span id="resampledTime">00:00:00</span>
+    <button id="saveResampleButton">Save</button>
 
     <script>
       const colors = Array.from(
@@ -58,6 +64,11 @@
         const voicesNumbox = document.getElementById("voicesNumbox");
         const durNumbox = document.getElementById("durNumbox");
         const recordButton = document.getElementById("recordButton");
+        const resampleButton = document.getElementById("resampleButton");
+        const swapResampledButton = document.getElementById(
+          "swapResampledButton"
+        );
+        const saveResampleButton = document.getElementById("saveResampleButton");
         const ctx = waveformCanvas.getContext("2d");
 
         let audioContext = new AudioContext();
@@ -80,6 +91,10 @@
           bufferLength,
           audioContext.sampleRate
         );
+
+        let resamplingStartTime;
+        let resamplingInterval;
+        let accumulatedResampledTime = 0;
 
         let mediaRecorder;
         let recordedChunks = [];
