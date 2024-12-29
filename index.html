@@ -18,6 +18,7 @@
     <canvas id="waveform" width="800" height="100"></canvas>
     <br />
     <button id="playButton">Play</button>
+    <button id="stopButton">Stop</button>
     <input id="loopCheckbox" name="loop" type="checkbox" />
     <label for="loopCheckbox">Loop</label>
     <input id="polyCheckbox" name="poly" type="checkbox" />
@@ -49,6 +50,7 @@
         const fileInput = document.getElementById("fileInput");
         const waveformCanvas = document.getElementById("waveform");
         const playButton = document.getElementById("playButton");
+        const stopButton = document.getElementById("stopButton");
         const loopCheckbox = document.getElementById("loopCheckbox");
         const polyCheckbox = document.getElementById("polyCheckbox");
         const drawCheckbox = document.getElementById("drawCheckbox");
@@ -171,6 +173,14 @@
             });
           }
           sources.at(-1).source.start(0, 0, duration);
+          cancelAnimationFrame(animationId);
+          drawPlayhead();
+        });
+
+        stopButton.addEventListener("click", () => {
+          if (!audioBuffer) return;
+          for (var src of sources) src.source.stop(); // stop all active audio
+          sources.length = 0; // empty the sources array
           cancelAnimationFrame(animationId);
           drawPlayhead();
         });
