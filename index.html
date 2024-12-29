@@ -45,7 +45,6 @@
     <button id="resampleButton">Start</button>
     <button id="swapResampledButton">Swap</button>
     <span id="resampledTime">00:00:00</span>
-    <button id="saveResampleButton">Save</button>
 
     <script>
       const colors = Array.from(
@@ -68,7 +67,6 @@
         const swapResampledButton = document.getElementById(
           "swapResampledButton"
         );
-        const saveResampleButton = document.getElementById("saveResampleButton");
         const ctx = waveformCanvas.getContext("2d");
 
         let audioContext = new AudioContext();
