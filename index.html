@@ -585,6 +585,7 @@
         });
 
         swapResampledButton.addEventListener("click", () => {
+          if (isResampling) stopResampling();
           swapResampled();
         });
       };
