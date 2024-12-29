@@ -94,7 +94,7 @@
         let resamplingInterval;
         let accumulatedResampledTime = 0;
 
-        let mediaRecorder;
+        let recorder;
         let isRecording = false;
 
         fileInput.addEventListener("change", async (event) => {
@@ -438,11 +438,11 @@
           });
           audioContext = new (window.AudioContext ||
             window.webkitAudioContext)();
-          mediaRecorder = new MediaRecorder(stream);
+          recorder = new MediaRecorder(stream);
           const chunks = [];
 
-          mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-          mediaRecorder.onstop = async () => {
+          recorder.ondataavailable = (e) => chunks.push(e.data);
+          recorder.onstop = async () => {
             const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
             audioBuffer = await audioContext.decodeAudioData(
               await blob.arrayBuffer()
@@ -451,13 +451,13 @@
             playButton.disabled = false;
           };
 
-          mediaRecorder.start();
+          recorder.start();
           isRecording = true;
           recordButton.textContent = "Stop Recording";
         }
 
         function stopRecording() {
-          mediaRecorder.stop();
+          recorder.stop();
           isRecording = false;
           recordButton.textContent = "Start Recording";
         }
