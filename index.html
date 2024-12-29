@@ -40,7 +40,7 @@
       step="0.005"
     />
     <br />
-    
+
     <script>
       const colors = Array.from(
         { length: 128 },
@@ -263,29 +263,31 @@
         }
 
         const drawPlayhead = () => {
-          if (!audioContext || sources.length === 0) return;
+          if (!audioContext) return;
 
           ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
           drawWaveform();
 
-          sources.forEach((src) => {
-            if (src == null) return;
-            let playbackTime =
-              audioContext.currentTime - src.startTime + src.startOffset;
-            if (audioContext.currentTime - src.startTime > src.duration) {
-              src.source.stop();
-              sources = sources.filter((s) => s !== src);
-            }
-            if (src.source.loop) {
-              playbackTime = playbackTime % audioBuffer.duration;
-            }
-            const position =
-              (playbackTime / audioBuffer.duration) * waveformCanvas.width;
-            ctx.fillStyle = src.color;
-            ctx.fillRect(position, 0, 1, waveformCanvas.height);
-          });
+          if (sources.length >= 0) {
+            sources.forEach((src) => {
+              if (src == null) return;
+              let playbackTime =
+                audioContext.currentTime - src.startTime + src.startOffset;
+              if (audioContext.currentTime - src.startTime > src.duration) {
+                src.source.stop();
+                sources = sources.filter((s) => s !== src);
+              }
+              if (src.source.loop) {
+                playbackTime = playbackTime % audioBuffer.duration;
+              }
+              const position =
+                (playbackTime / audioBuffer.duration) * waveformCanvas.width;
+              ctx.fillStyle = src.color;
+              ctx.fillRect(position, 0, 1, waveformCanvas.height);
+            });
 
-          animationId = requestAnimationFrame(drawPlayhead);
+            animationId = requestAnimationFrame(drawPlayhead);
+          }
         };
 
         function getEventPosition(event) {
