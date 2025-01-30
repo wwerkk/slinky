@@ -4,9 +4,11 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
         super();
         this.buffer = null; // Holds the audio buffer
         this.currentFrame = 0; // Current playback position
+        this.playbackRate = 1; // Playback rate
         this.isPlaying = false; // Playback state
         this.port.onmessage = (event) => {
-            const { action, buffer } = event.data;
+            const { action, buffer, rate } = event.data;
+            console.log(event.data);
             if (action === 'load') {
                 this.buffer = new Float32Array(buffer); // Copy the buffer
                 console.log('Buffer loaded:', this.buffer);
@@ -15,6 +17,8 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
                 this.isPlaying = true;
             } else if (action === 'stop') {
                 this.isPlaying = false;
+            } else if (action === 'setRate') {
+                this.playbackRate = rate;
             }
         };
     }
@@ -25,14 +29,14 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         const channelCount = output.length;
 
-        console.log('Processing frame:', this.currentFrame);
+        // console.log('Processing frame:', this.currentFrame);
 
         for (let i = 0; i < output[0].length; i++) {
             if (this.currentFrame < this.buffer.length) {
                 for (let channel = 0; channel < channelCount; channel++) {
                     output[channel][i] = this.buffer[this.currentFrame];
                 }
-                this.currentFrame++;
+                this.currentFrame += this.playbackRate;
             } else {
                 this.isPlaying = false; // Stop playback when the buffer ends
                 break;

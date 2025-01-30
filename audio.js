@@ -2,24 +2,33 @@ let audioContext;
 let audioBuffer;
 let customNode;
 
-document.getElementById('audioFile').addEventListener('change', function(event) {
+let rateSlider = document.getElementById('rate');
+let rateLabel = document.getElementById('rateLabel');
+
+rateSlider.addEventListener('input', function () {
+    rateLabel.innerText = rateSlider.value;
+    let rate = parseFloat(rateSlider.value);
+    setPlaybackRate(rate);
+});
+
+document.getElementById('audioFile').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file) {
         loadAudioFile(file);
     }
 });
 
-document.getElementById('play').addEventListener('click', function() {
+document.getElementById('play').addEventListener('click', function () {
     playAudio();
 });
 
-document.getElementById('stop').addEventListener('click', function() {
+document.getElementById('stop').addEventListener('click', function () {
     stopAudio();
 });
 
 async function loadAudioFile(file) {
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = async function (e) {
         const arrayBuffer = e.target.result;
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -54,5 +63,11 @@ function stopAudio() {
     if (customNode) {
         customNode.port.postMessage({ action: 'stop' });
         customNode.disconnect();
+    }
+}
+
+function setPlaybackRate(rate) {
+    if (customNode) {
+        customNode.port.postMessage({ action: 'setRate', rate: rate });
     }
 }
