@@ -29,16 +29,19 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         const channelCount = output.length;
 
-        // console.log('Processing frame:', this.currentFrame);
-
         for (let i = 0; i < output[0].length; i++) {
-            if (this.currentFrame < this.buffer.length) {
+            if (this.currentFrame < this.buffer.length - 1) {
+                const frameIndex = Math.floor(this.currentFrame);
+                const fraction = this.currentFrame - frameIndex;
+                const interpolatedSample = this.buffer[frameIndex] + 
+                    fraction * (this.buffer[frameIndex + 1] - this.buffer[frameIndex]);
+                
                 for (let channel = 0; channel < channelCount; channel++) {
-                    output[channel][i] = this.buffer[this.currentFrame];
+                    output[channel][i] = interpolatedSample;
                 }
                 this.currentFrame += this.playbackRate;
             } else {
-                this.isPlaying = false; // Stop playback when the buffer ends
+                this.isPlaying = false;
                 break;
             }
         }
