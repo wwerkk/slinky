@@ -115,11 +115,12 @@ function handleMouseDown (event) {
 
 function handleMouseUp (event) {
     mouseDown = false;
-    /// this should probably stop audio if "Play" was not clicked
+    /// TODO: this should probably stop audio if "Play" was not clicked
 }
 
 function handleWaveformDrag(event) {
     if (!customNode || !audioBuffer || !mouseDown) return;
+    // TODO: update playbackRate based on drag distance since last call
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const position = x / rect.width;
