@@ -11,7 +11,6 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
-    // Handle incoming messages
     handleMessage(event) {
         const { action, buffer, rate, loop } = event.data;
         console.log('Message received:', event.data);
@@ -37,26 +36,31 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         }
     }
 
-    // Audio processing loop
     process(inputs, outputs, parameters) {
         if (!this.isPlaying || !this.buffer) return true;
 
         const output = outputs[0];
         const channelCount = output.length;
+        const bufferLength = this.buffer.length;
 
         for (let i = 0; i < output[0].length; i++) {
+            // Handle looping
             if (this.loop) {
-                if (this.currentFrame >= this.buffer.length)
-                    this.currentFrame = this.currentFrame % this.buffer.length;
-                else if (this.currentFrame < 0) {
-                    this.currentFrame = this.buffer.length + this.currentFrame;
+                if (this.currentFrame >= bufferLength) {
+                    this.currentFrame %= bufferLength; // forward wrap
+                } else if (this.currentFrame < 0) {
+                    this.currentFrame += bufferLength; // reverse wrap
                 }
             }
-            if (this.currentFrame < this.buffer.length) {
+
+            if (this.currentFrame >= 0 && this.currentFrame < bufferLength) {
                 const frameIndex = Math.floor(this.currentFrame);
+                const nextFrameIndex = frameIndex >= 0 ? (frameIndex + 1) % bufferLength : bufferLength +frameIndex - 1; // Handle wrapping for interpolation
                 const fraction = this.currentFrame - frameIndex;
+
+                // Interpolate between the current and next frame
                 const interpolatedSample = this.buffer[frameIndex] +
-                    fraction * (this.buffer[frameIndex + 1] - this.buffer[frameIndex]);
+                    fraction * (this.buffer[nextFrameIndex] - this.buffer[frameIndex]);
 
                 for (let channel = 0; channel < channelCount; channel++) {
                     output[channel][i] = interpolatedSample;
@@ -64,7 +68,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
 
                 this.currentFrame += this.playbackRate;
             } else {
-                this.isPlaying = false; // Stop playback when the buffer ends
+                this.isPlaying = false;
                 break;
             }
         }
