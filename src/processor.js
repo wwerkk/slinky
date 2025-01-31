@@ -12,7 +12,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
     }
 
     handleMessage(event) {
-        const { action, buffer, rate, loop } = event.data;
+        const { action, buffer, rate, loop, position } = event.data;
         console.log('Message received:', event.data);
 
         switch (action) {
@@ -32,6 +32,9 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 break;
             case 'loop':
                 this.loop = loop;
+                break;
+            case 'position':
+                this.currentFrame = position * this.buffer.length;
                 break;
         }
     }

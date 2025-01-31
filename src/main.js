@@ -5,12 +5,17 @@ let audioBuffer;
 let customNode;
 let waveform;
 
+let mouseDown = false;
+
 // Event listeners
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
 document.getElementById('play').addEventListener('click', playAudio);
 document.getElementById('stop').addEventListener('click', stopAudio);
 document.getElementById('rate').addEventListener('input', handleRateChange);
 document.getElementById('loop').addEventListener('input', handleLoopChange);
+document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
+document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
+document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
 
 // File input handler
 async function handleFileInput(event) {
@@ -101,4 +106,24 @@ function readFileAsArrayBuffer(file) {
         reader.onerror = () => reject(reader.error);
         reader.readAsArrayBuffer(file);
     });
+}
+
+function handleMouseDown (event) {
+    mouseDown = true;
+    handleWaveformDrag(event);
+}
+
+function handleMouseUp (event) {
+    mouseDown = false;
+    /// this should probably stop audio if "Play" was not clicked
+}
+
+function handleWaveformDrag(event) {
+    if (!customNode || !audioBuffer || !mouseDown) return;
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const position = x / rect.width;
+    customNode.connect(audioContext.destination);
+    customNode.port.postMessage({ action: 'play' });
+    customNode.port.postMessage({ action: 'position', position: position });
 }
