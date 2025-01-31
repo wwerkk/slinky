@@ -2,54 +2,40 @@ let audioContext;
 let audioBuffer;
 let customNode;
 
-document.getElementById('audioFile').addEventListener('change', function (event) {
+// Event listeners
+document.getElementById('audioFile').addEventListener('change', handleFileInput);
+document.getElementById('play').addEventListener('click', playAudio);
+document.getElementById('stop').addEventListener('click', stopAudio);
+document.getElementById('rate').addEventListener('input', handleRateChange);
+document.getElementById('loop').addEventListener('input', handleLoopChange);
+
+// File input handler
+async function handleFileInput(event) {
     const file = event.target.files[0];
     if (file) {
-        loadAudioFile(file);
+        await loadAudioFile(file);
     }
-});
-
-document.getElementById('play').addEventListener('click', function () {
-    playAudio();
-});
-
-document.getElementById('stop').addEventListener('click', function () {
-    stopAudio();
-});
-
-document.getElementById('rate').addEventListener('input', function (event) {
-    let rate = parseFloat(event.target.value);
-    setPlaybackRate(rate);
-    document.getElementById('rateLabel').innerText = rate;
-});
-
-document.getElementById('loop').addEventListener('input', function (event) {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
-    }
-});
-
-async function loadAudioFile(file) {
-    const reader = new FileReader();
-    reader.onload = async function (e) {
-        const arrayBuffer = e.target.result;
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        // Load the custom processor
-        await audioContext.audioWorklet.addModule('custom-processor.js');
-        customNode = new AudioWorkletNode(audioContext, 'custom-playback-processor');
-
-        // Send the buffer to the processor
-        const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
-        customNode.port.postMessage({
-            action: 'load',
-            buffer: channelData.buffer, // Transfer the underlying ArrayBuffer
-        }, [channelData.buffer]); // Transfer ownership of the buffer
-    };
-    reader.readAsArrayBuffer(file);
 }
 
+// Load audio file
+async function loadAudioFile(file) {
+    const arrayBuffer = await readFileAsArrayBuffer(file);
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    // Load the custom processor
+    await audioContext.audioWorklet.addModule('custom-processor.js');
+    customNode = new AudioWorkletNode(audioContext, 'custom-playback-processor');
+
+    // Send the buffer to the processor
+    const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
+    customNode.port.postMessage({
+        action: 'load',
+        buffer: channelData.buffer, // Transfer the underlying ArrayBuffer
+    }, [channelData.buffer]); // Transfer ownership of the buffer
+}
+
+// Play audio
 function playAudio() {
     if (!customNode || !audioBuffer) return;
 
@@ -58,10 +44,12 @@ function playAudio() {
     // Connect the custom node to the destination
     customNode.connect(audioContext.destination);
     console.log('Custom node connected:', customNode);
+
     // Start playback
     customNode.port.postMessage({ action: 'play' });
 }
 
+// Stop audio
 function stopAudio() {
     if (customNode) {
         customNode.port.postMessage({ action: 'stop' });
@@ -69,8 +57,33 @@ function stopAudio() {
     }
 }
 
+// Handle playback rate change
+function handleRateChange(event) {
+    const rate = parseFloat(event.target.value);
+    setPlaybackRate(rate);
+    document.getElementById('rateLabel').innerText = rate;
+}
+
+// Set playback rate
 function setPlaybackRate(rate) {
     if (customNode) {
         customNode.port.postMessage({ action: 'setRate', rate: rate });
     }
+}
+
+// Handle loop change
+function handleLoopChange(event) {
+    if (customNode) {
+        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
+    }
+}
+
+// Helper function to read file as ArrayBuffer
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+    });
 }
