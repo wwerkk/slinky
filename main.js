@@ -24,8 +24,8 @@ async function loadAudioFile(file) {
     audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
     // Load the custom processor
-    await audioContext.audioWorklet.addModule('custom-processor.js');
-    workletNode = new AudioWorkletNode(audioContext, 'custom-playback-processor');
+    await audioContext.audioWorklet.addModule('processor.js');
+    workletNode = new AudioWorkletNode(audioContext, 'playback-processor');
 
     // Send the buffer to the processor
     const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity

@@ -1,4 +1,4 @@
-class CustomPlaybackProcessor extends AudioWorkletProcessor {
+class PlaybackProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.buffer = null; // Holds the audio buffer
@@ -70,4 +70,4 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('custom-playback-processor', CustomPlaybackProcessor);
+registerProcessor('playback-processor', PlaybackProcessor);
