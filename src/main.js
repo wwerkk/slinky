@@ -2,7 +2,7 @@ import { Waveform } from './waveform.js';
 
 let audioContext;
 let audioBuffer;
-let customNode;
+let workletNode;
 let waveform;
 
 let mouseDown = false;
@@ -37,17 +37,17 @@ async function loadAudioFile(file) {
 
     // Load the custom processor
     await audioContext.audioWorklet.addModule('./src/processor.js');
-    customNode = new AudioWorkletNode(audioContext, 'playback-processor');
+    workletNode = new AudioWorkletNode(audioContext, 'playback-processor');
 
     // Send the buffer to the processor
     const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
-    customNode.port.postMessage({
+    workletNode.port.postMessage({
         action: 'load',
         buffer: channelData.buffer, // Transfer the underlying ArrayBuffer
     }, [channelData.buffer]); // Transfer ownership of the buffer
 
     // Listen for playback progress updates
-    customNode.port.onmessage = (event) => {
+    workletNode.port.onmessage = (event) => {
         if (event.data.action === 'progress') {
             const progress = event.data.progress;
             waveform.updatePlayhead(progress);
@@ -57,23 +57,23 @@ async function loadAudioFile(file) {
 
 // Play audio
 function playAudio() {
-    if (!customNode || !audioBuffer) return;
+    if (!workletNode || !audioBuffer) return;
 
     stopAudio();
 
     // Connect the custom node to the destination
-    customNode.connect(audioContext.destination);
-    console.log('Custom node connected:', customNode);
+    workletNode.connect(audioContext.destination);
+    console.log('Custom node connected:', workletNode);
 
     // Start playback
-    customNode.port.postMessage({ action: 'play' });
+    workletNode.port.postMessage({ action: 'play' });
 }
 
 // Stop audio
 function stopAudio() {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'stop' });
-        customNode.disconnect();
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'stop' });
+        workletNode.disconnect();
     }
 }
 
@@ -86,15 +86,15 @@ function handleRateChange(event) {
 
 // Set playback rate
 function setPlaybackRate(rate) {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'setRate', rate: rate });
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'setRate', rate: rate });
     }
 }
 
 // Handle loop change
 function handleLoopChange(event) {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'loop', loop: event.target.checked });
     }
 }
 
@@ -119,12 +119,12 @@ function handleMouseUp (event) {
 }
 
 function handleWaveformDrag(event) {
-    if (!customNode || !audioBuffer || !mouseDown) return;
+    if (!workletNode || !audioBuffer || !mouseDown) return;
     // TODO: update playbackRate based on drag distance since last call
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const position = x / rect.width;
-    customNode.connect(audioContext.destination);
-    customNode.port.postMessage({ action: 'play' });
-    customNode.port.postMessage({ action: 'position', position: position });
+    workletNode.connect(audioContext.destination);
+    workletNode.port.postMessage({ action: 'play' });
+    workletNode.port.postMessage({ action: 'position', position: position });
 }
