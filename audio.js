@@ -2,15 +2,6 @@ let audioContext;
 let audioBuffer;
 let customNode;
 
-let rateSlider = document.getElementById('rate');
-let rateLabel = document.getElementById('rateLabel');
-
-rateSlider.addEventListener('input', function () {
-    rateLabel.innerText = rateSlider.value;
-    let rate = parseFloat(rateSlider.value);
-    setPlaybackRate(rate);
-});
-
 document.getElementById('audioFile').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file) {
@@ -24,6 +15,12 @@ document.getElementById('play').addEventListener('click', function () {
 
 document.getElementById('stop').addEventListener('click', function () {
     stopAudio();
+});
+
+document.getElementById('rate').addEventListener('input', function (event) {
+    let rate = parseFloat(event.target.value);
+    setPlaybackRate(rate);
+    document.getElementById('rateLabel').innerText = rate;
 });
 
 async function loadAudioFile(file) {
