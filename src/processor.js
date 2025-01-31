@@ -22,7 +22,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 console.log('Buffer loaded:', this.buffer);
                 break;
             case 'play':
-                this.currentFrame = 0; // Reset playback position
+                this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1; // Reset playback position
                 this.isPlaying = true;
                 break;
             case 'stop':
@@ -45,10 +45,13 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         const channelCount = output.length;
 
         for (let i = 0; i < output[0].length; i++) {
-            if (this.loop && this.currentFrame >= this.buffer.length) {
-                this.currentFrame = this.currentFrame % this.buffer.length;
+            if (this.loop) {
+                if (this.currentFrame >= this.buffer.length)
+                    this.currentFrame = this.currentFrame % this.buffer.length;
+                else if (this.currentFrame < 0) {
+                    this.currentFrame = this.buffer.length + this.currentFrame;
+                }
             }
-
             if (this.currentFrame < this.buffer.length) {
                 const frameIndex = Math.floor(this.currentFrame);
                 const fraction = this.currentFrame - frameIndex;
