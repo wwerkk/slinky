@@ -59,8 +59,6 @@ async function loadAudioFile(file) {
 function playAudio() {
     if (!workletNode || !audioBuffer) return;
 
-    stopAudio();
-
     // Connect the custom node to the destination
     workletNode.connect(audioContext.destination);
     console.log('Custom node connected:', workletNode);
