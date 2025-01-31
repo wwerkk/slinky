@@ -7,14 +7,22 @@
   </head>
   <body>
     <h1>Player</h1>
-    <input type="file" id="audioFile" accept="audio/*" />
+    <input type="file" id="audioFile" accept="audio/*" autocomplete="off" />
     <button id="play">Play</button>
     <button id="stop">Stop</button>
     <br /><br />
-    <input id="rate" type="range" value="1" min="0.5" max="2" step="0.1" />
+    <input
+      id="rate"
+      type="range"
+      value="1"
+      min="0.5"
+      max="2"
+      step="0.1"
+      autocomplete="off"
+    />
     <label for="rate">Playback Rate: <span id="rateLabel">1.0</span>x</label>
     <br />
-    <input id="loop" type="checkbox" />
+    <input id="loop" type="checkbox" autocomplete="off" />
     <label for="loop">Loop</label>
     <script src="audio.js"></script>
   </body>
