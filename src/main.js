@@ -1,6 +1,9 @@
+import { Waveform } from './waveform.js';
+
 let audioContext;
 let audioBuffer;
-let workletNode;
+let customNode;
+let waveform;
 
 // Event listeners
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
@@ -23,37 +26,49 @@ async function loadAudioFile(file) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
+    // Draw the waveform
+    waveform = new Waveform('waveformCanvas', 'playhead');
+    waveform.draw(audioBuffer);
+
     // Load the custom processor
     await audioContext.audioWorklet.addModule('./src/processor.js');
-    workletNode = new AudioWorkletNode(audioContext, 'playback-processor');
+    customNode = new AudioWorkletNode(audioContext, 'playback-processor');
 
     // Send the buffer to the processor
     const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
-    workletNode.port.postMessage({
+    customNode.port.postMessage({
         action: 'load',
         buffer: channelData.buffer, // Transfer the underlying ArrayBuffer
     }, [channelData.buffer]); // Transfer ownership of the buffer
+
+    // Listen for playback progress updates
+    customNode.port.onmessage = (event) => {
+        if (event.data.action === 'progress') {
+            const progress = event.data.progress;
+            waveform.updatePlayhead(progress);
+        }
+    };
 }
 
 // Play audio
 function playAudio() {
-    if (!workletNode || !audioBuffer) return;
+    if (!customNode || !audioBuffer) return;
 
     stopAudio();
 
     // Connect the custom node to the destination
-    workletNode.connect(audioContext.destination);
-    console.log('Custom node connected:', workletNode);
+    customNode.connect(audioContext.destination);
+    console.log('Custom node connected:', customNode);
 
     // Start playback
-    workletNode.port.postMessage({ action: 'play' });
+    customNode.port.postMessage({ action: 'play' });
 }
 
 // Stop audio
 function stopAudio() {
-    if (workletNode) {
-        workletNode.port.postMessage({ action: 'stop' });
-        workletNode.disconnect();
+    if (customNode) {
+        customNode.port.postMessage({ action: 'stop' });
+        customNode.disconnect();
     }
 }
 
@@ -66,15 +81,15 @@ function handleRateChange(event) {
 
 // Set playback rate
 function setPlaybackRate(rate) {
-    if (workletNode) {
-        workletNode.port.postMessage({ action: 'setRate', rate: rate });
+    if (customNode) {
+        customNode.port.postMessage({ action: 'setRate', rate: rate });
     }
 }
 
 // Handle loop change
 function handleLoopChange(event) {
-    if (workletNode) {
-        workletNode.port.postMessage({ action: 'loop', loop: event.target.checked });
+    if (customNode) {
+        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
     }
 }
 

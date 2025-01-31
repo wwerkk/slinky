@@ -55,7 +55,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
 
             if (this.currentFrame >= 0 && this.currentFrame < bufferLength) {
                 const frameIndex = Math.floor(this.currentFrame);
-                const nextFrameIndex = frameIndex >= 0 ? (frameIndex + 1) % bufferLength : bufferLength +frameIndex - 1; // Handle wrapping for interpolation
+                const nextFrameIndex = frameIndex >= 0 ? (frameIndex + 1) % bufferLength : bufferLength + frameIndex - 1; // Handle wrapping for interpolation
                 const fraction = this.currentFrame - frameIndex;
 
                 // Interpolate between the current and next frame
@@ -72,6 +72,9 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 break;
             }
         }
+
+        const progress = this.currentFrame / bufferLength;
+        this.port.postMessage({ action: 'progress', progress });
 
         return true;
     }
