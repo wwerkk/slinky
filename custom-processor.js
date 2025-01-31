@@ -5,9 +5,10 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
         this.buffer = null; // Holds the audio buffer
         this.currentFrame = 0; // Current playback position
         this.playbackRate = 1; // Playback rate
+        this.loop = false; // Looping state
         this.isPlaying = false; // Playback state
         this.port.onmessage = (event) => {
-            const { action, buffer, rate } = event.data;
+            const { action, buffer, rate, loop } = event.data;
             console.log(event.data);
             if (action === 'load') {
                 this.buffer = new Float32Array(buffer); // Copy the buffer
@@ -19,6 +20,8 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
                 this.isPlaying = false;
             } else if (action === 'setRate') {
                 this.playbackRate = rate;
+            } else if (action === 'loop') {
+                this.loop = loop;
             }
         };
     }
@@ -30,12 +33,13 @@ class CustomPlaybackProcessor extends AudioWorkletProcessor {
         const channelCount = output.length;
 
         for (let i = 0; i < output[0].length; i++) {
-            if (this.currentFrame < this.buffer.length - 1) {
+            if (this.loop && this.currentFrame >= this.buffer.length)
+                this.currentFrame = this.currentFrame % this.buffer.length;
+            if (this.currentFrame < this.buffer.length) {
                 const frameIndex = Math.floor(this.currentFrame);
                 const fraction = this.currentFrame - frameIndex;
-                const interpolatedSample = this.buffer[frameIndex] + 
+                const interpolatedSample = this.buffer[frameIndex] +
                     fraction * (this.buffer[frameIndex + 1] - this.buffer[frameIndex]);
-                
                 for (let channel = 0; channel < channelCount; channel++) {
                     output[channel][i] = interpolatedSample;
                 }

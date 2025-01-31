@@ -23,6 +23,12 @@ document.getElementById('rate').addEventListener('input', function (event) {
     document.getElementById('rateLabel').innerText = rate;
 });
 
+document.getElementById('loop').addEventListener('input', function (event) {
+    if (customNode) {
+        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
+    }
+});
+
 async function loadAudioFile(file) {
     const reader = new FileReader();
     reader.onload = async function (e) {
