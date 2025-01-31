@@ -1,6 +1,6 @@
 let audioContext;
 let audioBuffer;
-let customNode;
+let workletNode;
 
 // Event listeners
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
@@ -25,11 +25,11 @@ async function loadAudioFile(file) {
 
     // Load the custom processor
     await audioContext.audioWorklet.addModule('custom-processor.js');
-    customNode = new AudioWorkletNode(audioContext, 'custom-playback-processor');
+    workletNode = new AudioWorkletNode(audioContext, 'custom-playback-processor');
 
     // Send the buffer to the processor
     const channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
-    customNode.port.postMessage({
+    workletNode.port.postMessage({
         action: 'load',
         buffer: channelData.buffer, // Transfer the underlying ArrayBuffer
     }, [channelData.buffer]); // Transfer ownership of the buffer
@@ -37,23 +37,23 @@ async function loadAudioFile(file) {
 
 // Play audio
 function playAudio() {
-    if (!customNode || !audioBuffer) return;
+    if (!workletNode || !audioBuffer) return;
 
     stopAudio();
 
     // Connect the custom node to the destination
-    customNode.connect(audioContext.destination);
-    console.log('Custom node connected:', customNode);
+    workletNode.connect(audioContext.destination);
+    console.log('Custom node connected:', workletNode);
 
     // Start playback
-    customNode.port.postMessage({ action: 'play' });
+    workletNode.port.postMessage({ action: 'play' });
 }
 
 // Stop audio
 function stopAudio() {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'stop' });
-        customNode.disconnect();
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'stop' });
+        workletNode.disconnect();
     }
 }
 
@@ -66,15 +66,15 @@ function handleRateChange(event) {
 
 // Set playback rate
 function setPlaybackRate(rate) {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'setRate', rate: rate });
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'setRate', rate: rate });
     }
 }
 
 // Handle loop change
 function handleLoopChange(event) {
-    if (customNode) {
-        customNode.port.postMessage({ action: 'loop', loop: event.target.checked });
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'loop', loop: event.target.checked });
     }
 }
 
