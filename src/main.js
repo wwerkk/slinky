@@ -28,7 +28,7 @@ async function loadAudioFile(file) {
 
     // Draw the waveform
     waveform = new Waveform('waveformCanvas', 'playhead');
-    waveform.draw(audioBuffer);
+    waveform.plot(audioBuffer);
 
     // Load the custom processor
     await audioContext.audioWorklet.addModule('./src/processor.js');

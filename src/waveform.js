@@ -10,7 +10,7 @@ export class Waveform {
         this.canvas.height = this.canvasHeight;
     }
 
-    draw(buffer) {
+    plot(buffer) {
         const channelData = buffer.getChannelData(0); // Use the first channel
         const step = Math.ceil(channelData.length / this.canvasWidth);
         const amp = this.canvasHeight / 2;
