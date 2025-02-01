@@ -19,6 +19,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
             case 'load':
                 this.buffer = new Float32Array(buffer); // Copy the buffer
                 console.log('Buffer loaded:', this.buffer);
+                this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
                 break;
             case 'play':
                 if (this.currentFrame >= this.buffer.length || this.currentFrame < 0)
