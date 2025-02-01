@@ -21,7 +21,8 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 console.log('Buffer loaded:', this.buffer);
                 break;
             case 'play':
-                this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1; // TODO: no reset when "pausing"
+                if (this.currentFrame >= this.buffer.length || this.currentFrame < 0)
+                    this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
                 this.isPlaying = true;
                 break;
             case 'stop':
