@@ -123,6 +123,6 @@ function handleWaveformDrag(event) {
     const x = event.clientX - rect.left;
     const position = x / rect.width;
     workletNode.connect(audioContext.destination);
-    workletNode.port.postMessage({ action: 'play' });
     workletNode.port.postMessage({ action: 'position', position: position });
+    waveform.updatePlayhead(position);
 }
