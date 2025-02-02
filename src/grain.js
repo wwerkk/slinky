@@ -5,23 +5,41 @@ class GrainProcessor extends AudioWorkletProcessor {
         this.currentFrame = 0;
         this.playbackRate = 1;
         this.isPlaying = false;
-
+        this.grainSize = 2048; // About 46ms at 44.1kHz
+        this.overlap = 4; // Number of overlapping grains
+        this.grains = [];
+        
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
     handleMessage(event) {
-        const { action, buffer, rate } = event.data;
-
-        if (action === 'play') {
-            this.isPlaying = true;
+        const { action, buffer, position, rate } = event.data;
+        
+        if (action === 'updatePosition') {
             this.buffer = new Float32Array(buffer);
             this.playbackRate = rate;
-            this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
+            
+            // Calculate the exact frame position based on the normalized position
+            const framePosition = Math.floor(position * this.buffer.length);
+            
+            // Create a new grain
+            this.createGrain(framePosition);
+            this.isPlaying = true;
         }
     }
 
-    triangularWindow(position, length) {
-        return 1 - Math.abs((2 * position) / length - 1);
+    createGrain(startFrame) {
+        // Remove finished grains
+        this.grains = this.grains.filter(grain => grain.age < this.grainSize);
+        
+        // Add new grain if we don't have too many
+        if (this.grains.length < this.overlap) {
+            this.grains.push({
+                startFrame,
+                age: 0,
+                position: startFrame
+            });
+        }
     }
 
     hannWindow(position, length) {
@@ -29,32 +47,48 @@ class GrainProcessor extends AudioWorkletProcessor {
     }
 
     process(inputs, outputs, parameters) {
-        if (!this.isPlaying || !this.buffer) return true;
-
         const output = outputs[0];
         const channelCount = output.length;
-        const bufferLength = this.buffer.length;
+        
+        if (!this.buffer || !this.isPlaying) return true;
 
-        for (let i = 0; i < output[0].length; i++) {
-            if (this.currentFrame >= 0 && this.currentFrame < bufferLength) {
-                const frameIndex = Math.floor(this.currentFrame);
-                const nextFrameIndex = this.playbackRate >= 0 ? frameIndex + 1 : frameIndex - 1;
-                const fraction = this.currentFrame - frameIndex;
+        // Clear the output buffer
+        for (let channel = 0; channel < channelCount; channel++) {
+            output[channel].fill(0);
+        }
 
-                const interpolatedSample = this.buffer[frameIndex] +
-                    fraction * (this.buffer[nextFrameIndex] - this.buffer[frameIndex]);
-
-                const windowGain = this.hannWindow(frameIndex, bufferLength);
-
-                for (let channel = 0; channel < channelCount; channel++) {
-                    output[channel][i] = interpolatedSample * windowGain;
+        // Process each active grain
+        for (let grain of this.grains) {
+            const windowGain = this.hannWindow(grain.age, this.grainSize);
+            
+            for (let i = 0; i < output[0].length; i++) {
+                if (grain.age < this.grainSize) {
+                    const readPosition = Math.floor(grain.position);
+                    
+                    if (readPosition >= 0 && readPosition < this.buffer.length - 1) {
+                        // Linear interpolation
+                        const fraction = grain.position - readPosition;
+                        const currentSample = this.buffer[readPosition];
+                        const nextSample = this.buffer[readPosition + 1];
+                        const interpolatedSample = currentSample + fraction * (nextSample - currentSample);
+                        
+                        // Apply window and accumulate to output
+                        const sample = interpolatedSample * (1 / this.overlap);
+                        for (let channel = 0; channel < channelCount; channel++) {
+                            output[channel][i] += sample;
+                        }
+                    }
+                    
+                    grain.position += this.playbackRate;
+                    grain.age++;
                 }
-
-                this.currentFrame += this.playbackRate;
-            } else {
-                this.isPlaying = false;
-                break;
             }
+        }
+
+        // Stop if all grains are finished
+        if (this.grains.every(grain => grain.age >= this.grainSize)) {
+            this.isPlaying = false;
+            this.grains = [];
         }
 
         return true;

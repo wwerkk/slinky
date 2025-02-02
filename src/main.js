@@ -3,11 +3,12 @@ import { Waveform } from './waveform.js';
 let audioContext;
 let audioBuffer;
 let channelData;
-let grainletNodes = [];
+let grainletNode;
 let waveform;
 
 let mouseDown = false;
 let lastX = 0;
+let lastTime = 0;
 
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
@@ -31,7 +32,8 @@ async function loadAudioFile(file) {
     waveform.plot(audioBuffer);
 
     await audioContext.audioWorklet.addModule('./src/grain.js');
-
+    grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
+    grainletNode.connect(audioContext.destination);
 }
 
 function readFileAsArrayBuffer(file) {
@@ -56,35 +58,34 @@ function handleWaveformDrag(event) {
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const playbackRate = x > lastX ? 1 : -1;
-    const position = x / rect.width;
+    const currentTime = performance.now();
 
-    const grainDuration = 0.1; // in seconds
-    const startTime = position * audioBuffer.duration;
-    const endTime = Math.min(startTime + grainDuration, audioBuffer.duration);
+    // Calculate normalized position (0-1)
+    const position = Math.max(0, Math.min(1, x / rect.width));
 
-    const startSample = Math.floor(startTime * audioBuffer.sampleRate);
-    const endSample = Math.floor(endTime * audioBuffer.sampleRate);
-    const grainLength = endSample - startSample;
-
-    const grainBuffer = audioContext.createBuffer(1, grainLength, audioBuffer.sampleRate);
-    const grainData = grainBuffer.getChannelData(0);
-
-    for (let i = 0; i < grainLength; i++) {
-        grainData[i] = channelData[startSample + i];
+    // Calculate speed based on mouse movement
+    let mouseSpeed = 0;
+    if (lastX !== null && lastTime !== null) {
+        const dx = x - lastX;
+        const dt = currentTime - lastTime;
+        mouseSpeed = dx / dt; // pixels/ms
     }
 
-    let grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
-    grainletNode.connect(audioContext.destination);
+    // Scale the playback rate based on mouse speed
+    const speedScale = 0.1; // Adjust this value to taste
+    const playbackRate = mouseSpeed * speedScale;
 
+    // Send the current position and rate to the processor
     grainletNode.port.postMessage({
-        action: 'play',
-        buffer: grainBuffer.getChannelData(0).buffer,
-        rate: playbackRate,
-    }, [grainBuffer.getChannelData(0).buffer]);
+        action: 'updatePosition',
+        buffer: channelData.buffer,
+        position: position,
+        rate: playbackRate
+    }, [channelData.buffer.slice()]);
 
-    grainletNodes.push(grainletNode);
+    // Update visual feedback
     waveform.updatePlayhead(position);
 
     lastX = x;
+    lastTime = currentTime;
 }
