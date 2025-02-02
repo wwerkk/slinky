@@ -7,6 +7,8 @@ let waveform;
 
 let mouseDown = false;
 
+let isOver = true;
+
 // Event listeners
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
 document.getElementById('play').addEventListener('click', playAudio);
@@ -51,6 +53,9 @@ async function loadAudioFile(file) {
         if (event.data.action === 'progress') {
             const progress = event.data.progress;
             waveform.updatePlayhead(progress);
+        } else if (event.data.action === 'isOver') {
+            console.log(event.data);
+            isOver = event.data.isOver;
         }
     };
 }
@@ -106,12 +111,26 @@ function readFileAsArrayBuffer(file) {
     });
 }
 
-function handleMouseDown (event) {
+function handleMouseDown(event) {
     mouseDown = true;
-    handleWaveformDrag(event);
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'stop' });
+    }
 }
 
-function handleMouseUp (event) {
+function handleMouseUp(event) {
+    if (!workletNode || !audioBuffer || !mouseDown) return;
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    let position = x / rect.width;
+    console.log(event.clientX);
+    if (workletNode) {
+        workletNode.port.postMessage({ action: 'position', position: position });
+        console.log(isOver);
+        if (!isOver) {
+            workletNode.port.postMessage({ action: 'play' });
+        }
+    }
     mouseDown = false;
 }
 
@@ -120,7 +139,5 @@ function handleWaveformDrag(event) {
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const position = x / rect.width;
-    workletNode.connect(audioContext.destination);
-    workletNode.port.postMessage({ action: 'position', position: position });
     waveform.updatePlayhead(position);
 }

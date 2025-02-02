@@ -6,6 +6,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         this.playbackRate = 1; // Playback rate
         this.loop = false; // Looping state
         this.isPlaying = false; // Playback state
+        this.isOver = true; // Playback completed state
 
         // Handle messages from the main thread
         this.port.onmessage = (event) => this.handleMessage(event);
@@ -25,6 +26,8 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 if (this.currentFrame >= this.buffer.length || this.currentFrame < 0)
                     this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
                 this.isPlaying = true;
+                this.isOver = false;
+                this.port.postMessage({ action: 'isOver', isOver: this.isOver });
                 break;
             case 'stop':
                 this.isPlaying = false;
@@ -77,6 +80,8 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 this.currentFrame += this.playbackRate;
             } else {
                 this.isPlaying = false;
+                this.isOver = true;
+                this.port.postMessage({ action: 'isOver', isOver: this.isOver });
                 break;
             }
         }
