@@ -36,7 +36,10 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                 this.loop = loop;
                 break;
             case 'position':
-                this.currentFrame = position * this.buffer.length;
+                let currentFrame = position * this.buffer.length;
+                if (currentFrame < 0) currentFrame = 0;
+                else if (currentFrame >= this.buffer.length) currentFrame = this.buffer.length - 1;
+                this.currentFrame = currentFrame;
                 break;
         }
     }
