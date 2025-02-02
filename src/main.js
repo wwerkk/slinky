@@ -53,20 +53,34 @@ function handleMouseUp(event) {
 
 function handleWaveformDrag(event) {
     if (!audioBuffer || !mouseDown) return;
+
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const position = x / rect.width;
+
+    const grainDuration = 0.1; // in seconds
+    const startTime = position * audioBuffer.duration;
+    const endTime = Math.min(startTime + grainDuration, audioBuffer.duration);
+
+    const startSample = Math.floor(startTime * audioBuffer.sampleRate);
+    const endSample = Math.floor(endTime * audioBuffer.sampleRate);
+    const grainLength = endSample - startSample;
+
+    const grainBuffer = audioContext.createBuffer(1, grainLength, audioBuffer.sampleRate);
+    const grainData = grainBuffer.getChannelData(0);
+
+    for (let i = 0; i < grainLength; i++) {
+        grainData[i] = channelData[startSample + i];
+    }
+
     let grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
     grainletNode.connect(audioContext.destination);
 
-    // TODO: Create a grain from a segment of the audio buffer
-    /// ????
-
-    // grainletNode.port.postMessage({
-    //     action: 'play',
-    //     buffer: grainBuffer.buffer, // Transfer the underlying buffer
-    //     rate: 1,
-    // }, [grainBuffer.buffer]); // Transfer ownership of the buffer
+    grainletNode.port.postMessage({
+        action: 'play',
+        buffer: grainBuffer.getChannelData(0).buffer,
+        rate: 1,
+    }, [grainBuffer.getChannelData(0).buffer]);
 
     grainletNodes.push(grainletNode);
     waveform.updatePlayhead(position);
