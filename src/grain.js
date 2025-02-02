@@ -12,13 +12,13 @@ class GrainProcessor extends AudioWorkletProcessor {
 
     handleMessage(event) {
         const { action, buffer, rate} = event.data;
-        console.log('Message received:', event.data);
+        // console.log('Message received:', event.data);
 
         if (action === 'play') {
             this.isPlaying = true;
             this.buffer = new Float32Array(buffer); // Copy the buffer
-            this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
             this.playbackRate = rate;
+            this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
         }
     }
 

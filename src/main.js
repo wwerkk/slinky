@@ -7,6 +7,7 @@ let grainletNodes = [];
 let waveform;
 
 let mouseDown = false;
+let lastX = 0;
 
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
@@ -56,6 +57,8 @@ function handleWaveformDrag(event) {
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
+    const playbackRate = x > lastX ? 1 : -1;
+    console.log('playbackRate:', playbackRate);
     const position = x / rect.width;
 
     const grainDuration = 0.1; // in seconds
@@ -79,9 +82,11 @@ function handleWaveformDrag(event) {
     grainletNode.port.postMessage({
         action: 'play',
         buffer: grainBuffer.getChannelData(0).buffer,
-        rate: 1,
+        rate: playbackRate,
     }, [grainBuffer.getChannelData(0).buffer]);
 
     grainletNodes.push(grainletNode);
     waveform.updatePlayhead(position);
+
+    lastX = x;
 }
