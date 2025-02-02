@@ -20,6 +20,14 @@ class GrainProcessor extends AudioWorkletProcessor {
         }
     }
 
+    triangularWindow(position, length) {
+        return 1 - Math.abs((2 * position) / length - 1);
+    }
+
+    hannWindow(position, length) {
+        return 0.5 * (1 - Math.cos((2 * Math.PI * position) / length));
+    }
+
     process(inputs, outputs, parameters) {
         if (!this.isPlaying || !this.buffer) return true;
 
@@ -36,8 +44,10 @@ class GrainProcessor extends AudioWorkletProcessor {
                 const interpolatedSample = this.buffer[frameIndex] +
                     fraction * (this.buffer[nextFrameIndex] - this.buffer[frameIndex]);
 
+                const windowGain = this.hannWindow(frameIndex, bufferLength);
+
                 for (let channel = 0; channel < channelCount; channel++) {
-                    output[channel][i] = interpolatedSample;
+                    output[channel][i] = interpolatedSample * windowGain;
                 }
 
                 this.currentFrame += this.playbackRate;
