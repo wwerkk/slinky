@@ -10,7 +10,7 @@ class GrainProcessor extends AudioWorkletProcessor {
     }
 
     handleMessage(event) {
-        const { action, buffer, rate} = event.data;
+        const { action, buffer, rate } = event.data;
 
         if (action === 'play') {
             this.isPlaying = true;
