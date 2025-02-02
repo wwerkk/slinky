@@ -8,13 +8,11 @@ let waveform;
 
 let mouseDown = false;
 
-// Event listeners
 document.getElementById('audioFile').addEventListener('change', handleFileInput);
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
 
-// File input handler
 async function handleFileInput(event) {
     const file = event.target.files[0];
     if (file) {
@@ -22,26 +20,17 @@ async function handleFileInput(event) {
     }
 }
 
-// Load audio file
 async function loadAudioFile(file) {
     const arrayBuffer = await readFileAsArrayBuffer(file);
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    channelData = audioBuffer.getChannelData(0); // Use the first channel for simplicity
+    channelData = audioBuffer.getChannelData(0); // first channel for simplicity
 
     waveform = new Waveform('waveformCanvas', 'playhead');
     waveform.plot(audioBuffer);
 
     await audioContext.audioWorklet.addModule('./src/grain.js');
 
-}
-
-function stopAudio() {
-    for (let node of grainletNodes) {
-        node.port.postMessage({ action: 'stop' });
-        node.disconnect();
-    }
-    grainletNodes = [];
 }
 
 // Helper function to read file as ArrayBuffer
