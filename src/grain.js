@@ -1,22 +1,20 @@
 class GrainProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
-        this.buffer = null; // Holds the audio buffer
-        this.currentFrame = 0; // Current playback position
-        this.playbackRate = 1; // Playback rate
-        this.isPlaying = false; // Playback state
+        this.buffer = null;
+        this.currentFrame = 0;
+        this.playbackRate = 1;
+        this.isPlaying = false;
 
-        // Handle messages from the main thread
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
     handleMessage(event) {
         const { action, buffer, rate} = event.data;
-        // console.log('Message received:', event.data);
 
         if (action === 'play') {
             this.isPlaying = true;
-            this.buffer = new Float32Array(buffer); // Copy the buffer
+            this.buffer = new Float32Array(buffer);
             this.playbackRate = rate;
             this.currentFrame = this.playbackRate >= 0 ? 0 : this.buffer.length - 1;
         }
@@ -35,7 +33,6 @@ class GrainProcessor extends AudioWorkletProcessor {
                 const nextFrameIndex = this.playbackRate >= 0 ? frameIndex + 1 : frameIndex - 1;
                 const fraction = this.currentFrame - frameIndex;
 
-                // Interpolate between the current and next frame
                 const interpolatedSample = this.buffer[frameIndex] +
                     fraction * (this.buffer[nextFrameIndex] - this.buffer[frameIndex]);
 
