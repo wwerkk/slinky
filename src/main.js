@@ -34,7 +34,6 @@ async function loadAudioFile(file) {
 
 }
 
-// Helper function to read file as ArrayBuffer
 function readFileAsArrayBuffer(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -58,7 +57,6 @@ function handleWaveformDrag(event) {
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const playbackRate = x > lastX ? 1 : -1;
-    console.log('playbackRate:', playbackRate);
     const position = x / rect.width;
 
     const grainDuration = 0.1; // in seconds
