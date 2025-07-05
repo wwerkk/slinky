@@ -1,4 +1,4 @@
-class olaProcessor extends AudioWorkletProcessor {
+class OlaProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.buffer = null;
@@ -95,4 +95,4 @@ class olaProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('ola-processor', olaProcessor);
+registerProcessor('ola-processor', OlaProcessor);
