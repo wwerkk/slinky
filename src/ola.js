@@ -29,13 +29,16 @@ class olaProcessor extends AudioWorkletProcessor {
         const { action, buffer, position, rate } = event.data;
 
         if (action === 'updatePosition') {
-            this.buffer = new Float32Array(buffer);
             this.playbackRate = rate;
-
             // Calculate the exact frame position based on the normalized position
             const framePosition = Math.floor(position * this.buffer.length);
             this.createGrain(framePosition);
             this.isPlaying = true;
+        } else if (action === 'setBuffer') {
+            this.buffer = new Float32Array(buffer);
+            this.currentFrame = 0;
+            this.grains = [];
+            console.log('Buffer set with length:', this.buffer.length);
         }
     }
 

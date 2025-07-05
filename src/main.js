@@ -45,6 +45,10 @@ function handleDrop(event) {
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
+        olaNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: channelData.buffer
+        }, [channelData.buffer.slice()]);
 
         waveform.plot(audioBuffer);
     };
@@ -106,6 +110,10 @@ async function startRecording() {
                     olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
                     olaNode.connect(audioContext.destination);
                 }
+                olaNode.port.postMessage({
+                    action: 'setBuffer',
+                    buffer: channelData.buffer
+                }, [channelData.buffer.slice()]);
             } catch (error) {
                 console.error('Error decoding recorded audio:', error);
             }
@@ -162,13 +170,11 @@ function handleWaveformDrag(event) {
     }
 
 
-    // Send the current position and playbackRate to the processor
     olaNode.port.postMessage({
         action: 'updatePosition',
-        buffer: channelData.buffer,
         position: position,
         rate: mouseSpeed
-    }, [channelData.buffer.slice()]);
+    });
 
     // Update visual feedback
     waveform.updatePlayhead(position);
@@ -197,4 +203,9 @@ async function init() {
         olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
         olaNode.connect(audioContext.destination);
     }
+
+    olaNode.port.postMessage({
+        action: 'setBuffer',
+        buffer: channelData.buffer
+    }, [channelData.buffer.slice()]);
 }
