@@ -12,8 +12,8 @@ let isRecording = false;
 let olaNode;
 
 let mouseDown = false;
-let lastX = 0;
-let lastTime = 0;
+let lastX = null;
+let lastTime = null;
 
 document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
