@@ -72,7 +72,7 @@ class olaProcessor extends AudioWorkletProcessor {
                         const interpolatedSample = currentSample + fraction * (nextSample - currentSample);
 
                         // Apply window and accumulate to output
-                        const sample = interpolatedSample * (1 / this.overlap);
+                        const sample = interpolatedSample * (1 / this.overlap) * windowGain;
                         for (let channel = 0; channel < channelCount; channel++) {
                             output[channel][i] += sample;
                         }
