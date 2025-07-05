@@ -5,23 +5,24 @@ const DEFAULT_SAMPLE_URL = './sine.wav';
 let audioContext;
 let audioBuffer;
 let channelData;
-let olaNode;
 let waveform;
+let mediaRecorder;
+let recordedChunks = [];
+let isRecording = false;
+let olaNode;
 
 let mouseDown = false;
 let lastX = 0;
 let lastTime = 0;
 
-let mediaRecorder;
-let recordedChunks = [];
-let isRecording = false;
-
 document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
+document.getElementById('recordButton').addEventListener('click', toggleRecording);
+
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
-document.getElementById('recordButton').addEventListener('click', toggleRecording);
+
 
 init();
 
@@ -43,7 +44,7 @@ function handleDrop(event) {
         }
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-        channelData = audioBuffer.getChannelData(0); // first channel for simplicity
+        channelData = audioBuffer.getChannelData(0); // first channel for now
 
         waveform.plot(audioBuffer);
     };
@@ -68,38 +69,38 @@ async function startRecording() {
         // Show waiting state immediately when clicked
         const button = document.getElementById('recordButton');
         button.classList.add('waiting');
-        
+
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         recordedChunks = [];
-        
+
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
         };
-        
+
         mediaRecorder.onstart = () => {
             // Remove waiting state and show recording state when recording actually starts
             button.classList.remove('waiting');
             button.classList.add('recording');
             isRecording = true;
         };
-        
+
         mediaRecorder.onstop = async () => {
             const blob = new Blob(recordedChunks, { type: 'audio/webm' });
             const arrayBuffer = await blob.arrayBuffer();
-            
+
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-            
+
             try {
                 const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
                 audioBuffer = recordedBuffer;
                 channelData = audioBuffer.getChannelData(0);
                 waveform.plot(audioBuffer);
-                
+
                 if (!olaNode) {
                     await audioContext.audioWorklet.addModule('./src/ola.js');
                     olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
@@ -108,13 +109,13 @@ async function startRecording() {
             } catch (error) {
                 console.error('Error decoding recorded audio:', error);
             }
-            
+
             // Stop all tracks
             stream.getTracks().forEach(track => track.stop());
         };
-        
+
         mediaRecorder.start();
-        
+
     } catch (error) {
         console.error('Error accessing microphone:', error);
         // Remove waiting state if microphone access fails
@@ -127,7 +128,7 @@ function stopRecording() {
     if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
         isRecording = false;
-        
+
         const button = document.getElementById('recordButton');
         button.classList.remove('recording');
         button.classList.remove('waiting');
