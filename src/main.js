@@ -46,11 +46,13 @@ async function handleDrop(event) {
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
-        olaNode.port.postMessage({
-            action: 'setBuffer',
-            buffer: channelData.buffer
-        }, [channelData.buffer.slice()]);
-        waveform.plot(audioBuffer);
+        if (olaNode) {
+            olaNode.port.postMessage({
+                action: 'setBuffer',
+                buffer: channelData.buffer
+            }, [channelData.buffer.slice()]);
+            waveform.plot(audioBuffer);
+        }
     };
 
     event.preventDefault();
@@ -95,10 +97,12 @@ async function toggleRecording() {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
                     audioBuffer = recordedBuffer;
                     channelData = audioBuffer.getChannelData(0);
-                    olaNode.port.postMessage({
-                        action: 'setBuffer',
-                        buffer: channelData.buffer
-                    }, [channelData.buffer.slice()]);
+                    if (olaNode) {
+                        olaNode.port.postMessage({
+                            action: 'setBuffer',
+                            buffer: channelData.buffer
+                        }, [channelData.buffer.slice()]);
+                    }
                     waveform.plot(audioBuffer);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
