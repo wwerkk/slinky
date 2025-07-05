@@ -169,7 +169,7 @@ function handleWaveformMouseMove(event) {
 
 async function init() {
     if (!audioContext) {
-        audioContext = new (window.AudioContext || window['webkitAudioContext'])();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     if (!audioBuffer) {
