@@ -36,7 +36,13 @@ function handleDrop(event) {
 }
 
 async function loadAudioFile(file) {
-    const arrayBuffer = await readFileAsArrayBuffer(file);
+    const arrayBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+    });
+
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -50,15 +56,6 @@ async function loadAudioFile(file) {
         olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
         olaNode.connect(audioContext.destination);
     }
-}
-
-function readFileAsArrayBuffer(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsArrayBuffer(file);
-    });
 }
 
 async function toggleRecording() {
