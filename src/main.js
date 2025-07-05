@@ -1,5 +1,7 @@
 import { Waveform } from './waveform.js';
 
+const DEFAULT_SAMPLE_URL = './sine.wav';
+
 let audioContext;
 let audioBuffer;
 let channelData;
@@ -179,33 +181,24 @@ function handleWaveformDrag(event) {
     lastTime = currentTime;
 }
 
-function generateSineWave() {
-    const duration = 5; // seconds
-    const frequency = 440; // Hz
-    const amplitude = 0.5;
-
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const sampleRate = audioContext.sampleRate;
-    const length = sampleRate * duration;
-
-    audioBuffer = audioContext.createBuffer(1, length, sampleRate);
-    const channelData = audioBuffer.getChannelData(0);
-
-    for (let i = 0; i < length; i++) {
-        channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * amplitude;
-    }
-
-    return audioBuffer;
-}
-
 async function initializeDefaultBuffer() {
-    const defaultBuffer = generateSineWave();
-    channelData = defaultBuffer.getChannelData(0);
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window['webkitAudioContext'])();
+    }
+    const response = await fetch(DEFAULT_SAMPLE_URL);
+    const arrayBuffer = await response.arrayBuffer();
+    const defaultBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    audioBuffer = defaultBuffer;
+    channelData = audioBuffer.getChannelData(0);
 
-    waveform = new Waveform('waveformCanvas', 'playhead');
+    if (!waveform) {
+        waveform = new Waveform('waveformCanvas', 'playhead');
+    }
     waveform.plot(defaultBuffer);
 
-    await audioContext.audioWorklet.addModule('./src/ola.js');
-    olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
-    olaNode.connect(audioContext.destination);
+    if (!olaNode) {
+        await audioContext.audioWorklet.addModule('./src/ola.js');
+        olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
+        olaNode.connect(audioContext.destination);
+    }
 }
