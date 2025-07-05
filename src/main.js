@@ -168,7 +168,7 @@ function handleTouchMove(event) {
     const touch = event.touches[0];
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
-    
+
     updateWaveformPosition(x, rect.width);
 }
 
@@ -177,7 +177,7 @@ function handleWaveformMouseMove(event) {
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    
+
     updateWaveformPosition(x, rect.width);
 }
 
