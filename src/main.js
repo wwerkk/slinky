@@ -20,8 +20,8 @@ document.addEventListener('drop', handleDrop);
 document.getElementById('recordButton').addEventListener('click', toggleRecording);
 
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
-document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
+document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 
 
 init();
@@ -157,11 +157,7 @@ function handleWaveformDrag(event) {
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const currentTime = performance.now();
-
-    // Calculate normalized position (0-1)
     const position = Math.max(0, Math.min(1, x / rect.width));
-
-    // Calculate speed based on mouse movement
     let mouseSpeed = 0;
     if (lastX !== null && lastTime !== null) {
         const dx = x - lastX;
@@ -169,16 +165,13 @@ function handleWaveformDrag(event) {
         mouseSpeed = dx / dt; // pixels/ms
     }
 
-
     olaNode.port.postMessage({
         action: 'updatePosition',
         position: position,
         rate: mouseSpeed
     });
 
-    // Update visual feedback
     waveform.updatePlayhead(position);
-
     lastX = x;
     lastTime = currentTime;
 }
