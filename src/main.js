@@ -30,28 +30,28 @@ function handleDragOver(event) {
 }
 
 function handleDrop(event) {
+    const loadAudioFile = async (file) => {
+        const arrayBuffer = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsArrayBuffer(file);
+        });
+
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        channelData = audioBuffer.getChannelData(0); // first channel for simplicity
+
+        waveform.plot(audioBuffer);
+    };
+
     event.preventDefault();
     const files = event.dataTransfer.files;
     if (files.length > 0) {
         loadAudioFile(files[0]);
     }
-}
-
-async function loadAudioFile(file) {
-    const arrayBuffer = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsArrayBuffer(file);
-    });
-
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    channelData = audioBuffer.getChannelData(0); // first channel for simplicity
-
-    waveform.plot(audioBuffer);
 }
 
 async function toggleRecording() {
