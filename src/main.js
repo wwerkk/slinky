@@ -23,7 +23,7 @@ document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
 document.getElementById('recordButton').addEventListener('click', toggleRecording);
 
-initializeDefaultBuffer();
+init();
 
 function handleDragOver(event) {
     event.preventDefault();
@@ -181,7 +181,7 @@ function handleWaveformDrag(event) {
     lastTime = currentTime;
 }
 
-async function initializeDefaultBuffer() {
+async function init() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window['webkitAudioContext'])();
     }
