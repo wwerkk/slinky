@@ -52,12 +52,6 @@ async function loadAudioFile(file) {
     channelData = audioBuffer.getChannelData(0); // first channel for simplicity
 
     waveform.plot(audioBuffer);
-
-    if (!olaNode) {
-        await audioContext.audioWorklet.addModule('./src/ola.js');
-        olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
-        olaNode.connect(audioContext.destination);
-    }
 }
 
 async function toggleRecording() {
