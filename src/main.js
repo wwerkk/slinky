@@ -17,7 +17,8 @@ let lastTime = null;
 
 document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
-document.getElementById('recordButton').addEventListener('click', toggleRecording);
+const recordButton = document.getElementById('recordButton');
+recordButton.addEventListener('click', toggleRecording);
 
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
@@ -63,8 +64,7 @@ async function toggleRecording() {
     async function startRecording() {
         try {
             // Show waiting state immediately when clicked
-            const button = document.getElementById('recordButton');
-            button.classList.add('waiting');
+            recordButton.classList.add('waiting');
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
@@ -78,8 +78,8 @@ async function toggleRecording() {
 
             mediaRecorder.onstart = () => {
                 // Remove waiting state and show recording state when recording actually starts
-                button.classList.remove('waiting');
-                button.classList.add('recording');
+                recordButton.classList.remove('waiting');
+                recordButton.classList.add('recording');
                 isRecording = true;
             };
 
@@ -113,8 +113,7 @@ async function toggleRecording() {
         } catch (error) {
             console.error('Error accessing microphone:', error);
             // Remove waiting state if microphone access fails
-            const button = document.getElementById('recordButton');
-            button.classList.remove('waiting');
+            recordButton.classList.remove('waiting');
         }
     }
     function stopRecording() {
@@ -122,9 +121,8 @@ async function toggleRecording() {
             mediaRecorder.stop();
             isRecording = false;
 
-            const button = document.getElementById('recordButton');
-            button.classList.remove('recording');
-            button.classList.remove('waiting');
+            recordButton.classList.remove('recording');
+            recordButton.classList.remove('waiting');
         }
     }
 
