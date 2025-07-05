@@ -42,7 +42,7 @@ class olaProcessor extends AudioWorkletProcessor {
     }
 
     hannWindow(position, length) {
-        return 0.5 * (1 - Math.cos((2 * Math.PI * position) / ( length - 1)));
+        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / ( length - 1))) : 1;
     }
 
     process(inputs, outputs, parameters) {
