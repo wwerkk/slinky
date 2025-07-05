@@ -21,7 +21,7 @@ const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
-document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
+document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 
 
@@ -141,7 +141,7 @@ function handleMouseUp(event) {
     mouseDown = false;
 }
 
-function handleWaveformDrag(event) {
+function handleWaveformMouseMove(event) {
     if (!audioBuffer || !mouseDown) return;
 
     const rect = event.target.getBoundingClientRect();
