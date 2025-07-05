@@ -10,15 +10,21 @@ let mouseDown = false;
 let lastX = 0;
 let lastTime = 0;
 
-document.getElementById('audioFile').addEventListener('change', handleFileInput);
+document.addEventListener('dragover', handleDragOver);
+document.addEventListener('drop', handleDrop);
 document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformDrag);
 
-async function handleFileInput(event) {
-    const file = event.target.files[0];
-    if (file) {
-        await loadAudioFile(file);
+function handleDragOver(event) {
+    event.preventDefault();
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        loadAudioFile(files[0]);
     }
 }
 
