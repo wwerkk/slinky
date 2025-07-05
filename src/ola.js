@@ -51,12 +51,12 @@ class olaProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         const channelCount = output.length;
 
-        if (!this.buffer || !this.isPlaying) return true;
-
         // Clear the output buffer
         for (let channel = 0; channel < channelCount; channel++) {
             output[channel].fill(0);
         }
+
+        if (!this.buffer || !this.isPlaying) return true;
 
         // Process each active grain
         for (let grain of this.grains) {
