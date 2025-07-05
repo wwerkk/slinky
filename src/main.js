@@ -157,6 +157,7 @@ function handleMouseUp(event) {
 function handleTouchStart(event) {
     event.preventDefault();
     isInteracting = true;
+    
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
@@ -176,6 +177,10 @@ function handleTouchMove(event) {
     const x = touch.clientX - rect.left;
 
     updateWaveformPosition(x, rect.width);
+
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
 }
 
 function handleWaveformMouseMove(event) {
