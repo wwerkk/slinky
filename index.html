@@ -28,12 +28,46 @@
           transform: translateX(0);
           /* transition: transform 0.001s linear delay 0.001; */
         }
+        #recordButton {
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 0px solid #000;
+          background-color: #671212;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.2s ease-in-out;
+        }
+        #recordButton:hover {
+          background-color: #b91c1c;
+          transform: scale(1.05);
+        }
+        #recordButton.waiting {
+          background-color: #f5610b;
+          animation: waitingPulse 0.8s infinite;
+        }
+        #recordButton.recording {
+          animation: recordBlink 1s infinite;
+          background-color: #dc2626;
+        }
+        @keyframes waitingPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        @keyframes recordBlink {
+          0% { background-color: #dc2626; }
+          50% { background-color: #671212; }
+        }
       </style>
     </head>
     <body>
       <div id="waveform">
         <canvas id="waveformCanvas"></canvas>
         <div id="playhead"></div>
+        <button id="recordButton" title="Record Audio"></button>
       </div>
       <script type="module" src="./src/main.js"></script>
     </body>
