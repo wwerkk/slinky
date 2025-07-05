@@ -37,7 +37,7 @@ class olaProcessor extends AudioWorkletProcessor {
                 this.isPlaying = true;
             }
         } else if (action === 'setBuffer') {
-            this.buffer = new Float32Array(buffer);
+            this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
             this.currentFrame = 0;
             this.grains = [];
         }
