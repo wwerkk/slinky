@@ -5,11 +5,11 @@ const DEFAULT_SAMPLE_URL = './sine.wav';
 let audioContext;
 let audioBuffer;
 let channelData;
+let olaNode;
 let waveform;
 let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
-let olaNode;
 
 let mouseDown = false;
 let lastX = null;
@@ -51,8 +51,8 @@ async function handleDrop(event) {
                 action: 'setBuffer',
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
-            waveform.plot(audioBuffer);
         }
+        waveform.plot(audioBuffer);
     };
 
     event.preventDefault();
@@ -184,11 +184,6 @@ async function init() {
         channelData = audioBuffer.getChannelData(0);
     }
 
-    if (!waveform) {
-        waveform = new Waveform('waveformCanvas', 'playhead');
-    }
-    waveform.plot(audioBuffer);
-
     if (!olaNode) {
         await audioContext.audioWorklet.addModule('./src/ola.js');
         olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
@@ -198,4 +193,9 @@ async function init() {
         action: 'setBuffer',
         buffer: channelData.buffer
     }, [channelData.buffer.slice()]);
+
+    if (!waveform) {
+        waveform = new Waveform('waveformCanvas', 'playhead');
+    }
+    waveform.plot(audioBuffer);
 }
