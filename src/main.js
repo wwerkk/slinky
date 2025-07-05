@@ -45,11 +45,11 @@ async function handleDrop(event) {
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
-        waveform.plot(audioBuffer);
         olaNode.port.postMessage({
             action: 'setBuffer',
             buffer: channelData.buffer
-        }, [channelData.buffer]);
+        }, [channelData.buffer.slice()]);
+        waveform.plot(audioBuffer);
     };
 
     event.preventDefault();
@@ -95,17 +95,11 @@ async function toggleRecording() {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
                     audioBuffer = recordedBuffer;
                     channelData = audioBuffer.getChannelData(0);
-                    waveform.plot(audioBuffer);
-
-                    if (!olaNode) {
-                        await audioContext.audioWorklet.addModule('./src/ola.js');
-                        olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
-                        olaNode.connect(audioContext.destination);
-                    }
                     olaNode.port.postMessage({
                         action: 'setBuffer',
                         buffer: channelData.buffer
-                    }, [channelData.buffer]);
+                    }, [channelData.buffer.slice()]);
+                    waveform.plot(audioBuffer);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -179,25 +173,27 @@ async function init() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window['webkitAudioContext'])();
     }
-    const response = await fetch(DEFAULT_SAMPLE_URL);
-    const arrayBuffer = await response.arrayBuffer();
-    const defaultBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    audioBuffer = defaultBuffer;
-    channelData = audioBuffer.getChannelData(0);
+
+    if (!audioBuffer) {
+        const response = await fetch(DEFAULT_SAMPLE_URL);
+        const arrayBuffer = await response.arrayBuffer();
+        const defaultBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffer = defaultBuffer;
+        channelData = audioBuffer.getChannelData(0);
+    }
 
     if (!waveform) {
         waveform = new Waveform('waveformCanvas', 'playhead');
     }
-    waveform.plot(defaultBuffer);
+    waveform.plot(audioBuffer);
 
     if (!olaNode) {
         await audioContext.audioWorklet.addModule('./src/ola.js');
         olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
         olaNode.connect(audioContext.destination);
     }
-
     olaNode.port.postMessage({
         action: 'setBuffer',
         buffer: channelData.buffer
-    }, [channelData.buffer]);
+    }, [channelData.buffer.slice()]);
 }
