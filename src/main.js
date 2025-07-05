@@ -105,28 +105,28 @@ function generateSineWave() {
     const duration = 5; // seconds
     const frequency = 440; // Hz
     const amplitude = 0.5;
-    
+
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const sampleRate = audioContext.sampleRate;
     const length = sampleRate * duration;
-    
+
     audioBuffer = audioContext.createBuffer(1, length, sampleRate);
     const channelData = audioBuffer.getChannelData(0);
-    
+
     for (let i = 0; i < length; i++) {
         channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * amplitude;
     }
-    
+
     return audioBuffer;
 }
 
 async function initializeDefaultBuffer() {
     const defaultBuffer = generateSineWave();
     channelData = defaultBuffer.getChannelData(0);
-    
+
     waveform = new Waveform('waveformCanvas', 'playhead');
     waveform.plot(defaultBuffer);
-    
+
     await audioContext.audioWorklet.addModule('./src/grain.js');
     grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
     grainletNode.connect(audioContext.destination);

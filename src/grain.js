@@ -8,20 +8,20 @@ class GrainProcessor extends AudioWorkletProcessor {
         this.grainSize = 2048; // About 46ms at 44.1kHz
         this.overlap = 4; // Number of overlapping grains
         this.grains = [];
-        
+
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
     handleMessage(event) {
         const { action, buffer, position, rate } = event.data;
-        
+
         if (action === 'updatePosition') {
             this.buffer = new Float32Array(buffer);
             this.playbackRate = rate;
-            
+
             // Calculate the exact frame position based on the normalized position
             const framePosition = Math.floor(position * this.buffer.length);
-            
+
             // Create a new grain
             this.createGrain(framePosition);
             this.isPlaying = true;
@@ -31,7 +31,7 @@ class GrainProcessor extends AudioWorkletProcessor {
     createGrain(startFrame) {
         // Remove finished grains
         this.grains = this.grains.filter(grain => grain.age < this.grainSize);
-        
+
         // Add new grain if we don't have too many
         if (this.grains.length < this.overlap) {
             this.grains.push({
@@ -49,7 +49,7 @@ class GrainProcessor extends AudioWorkletProcessor {
     process(inputs, outputs, parameters) {
         const output = outputs[0];
         const channelCount = output.length;
-        
+
         if (!this.buffer || !this.isPlaying) return true;
 
         // Clear the output buffer
@@ -60,25 +60,25 @@ class GrainProcessor extends AudioWorkletProcessor {
         // Process each active grain
         for (let grain of this.grains) {
             const windowGain = this.hannWindow(grain.age, this.grainSize);
-            
+
             for (let i = 0; i < output[0].length; i++) {
                 if (grain.age < this.grainSize) {
                     const readPosition = Math.floor(grain.position);
-                    
+
                     if (readPosition >= 0 && readPosition < this.buffer.length - 1) {
                         // Linear interpolation
                         const fraction = grain.position - readPosition;
                         const currentSample = this.buffer[readPosition];
                         const nextSample = this.buffer[readPosition + 1];
                         const interpolatedSample = currentSample + fraction * (nextSample - currentSample);
-                        
+
                         // Apply window and accumulate to output
                         const sample = interpolatedSample * (1 / this.overlap);
                         for (let channel = 0; channel < channelCount; channel++) {
                             output[channel][i] += sample;
                         }
                     }
-                    
+
                     grain.position += this.playbackRate;
                     grain.age++;
                 }
