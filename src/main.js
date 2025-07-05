@@ -42,6 +42,7 @@ function handleDrop(event) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // first channel for simplicity
 
         waveform.plot(audioBuffer);
