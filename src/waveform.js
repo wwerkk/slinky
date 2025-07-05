@@ -60,7 +60,7 @@ export class Waveform {
     }
 
     updatePlayhead(progress) {
-        const playheadX = progress * this.canvasWidth;
-        this.playhead.style.transform = `translateX(${playheadX}px)`;
+        const playheadX = Math.max(0, Math.min(1, progress)) * this.canvasWidth;
+        if (this.playhead) this.playhead.style.transform = `translateX(${playheadX}px)`;
     }
 }
