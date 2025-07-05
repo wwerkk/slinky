@@ -30,7 +30,7 @@ function handleDragOver(event) {
     event.preventDefault();
 }
 
-function handleDrop(event) {
+async function handleDrop(event) {
     const loadAudioFile = async (file) => {
         const arrayBuffer = await new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -55,7 +55,7 @@ function handleDrop(event) {
     event.preventDefault();
     const files = event.dataTransfer.files;
     if (files.length > 0) {
-        loadAudioFile(files[0]);
+        await loadAudioFile(files[0]);
     }
 }
 
