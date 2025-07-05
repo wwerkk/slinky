@@ -38,7 +38,6 @@ class olaProcessor extends AudioWorkletProcessor {
             this.buffer = new Float32Array(buffer);
             this.currentFrame = 0;
             this.grains = [];
-            console.log('Buffer set with length:', this.buffer.length);
         }
     }
 
