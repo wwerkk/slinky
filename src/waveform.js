@@ -29,6 +29,7 @@ export class Waveform {
         this.currentBuffer = buffer; // Store buffer for potential replotting
         this.updateCanvasSize();
 
+        if (!buffer || buffer.numberOfChannels < 1) return;
         const channelData = buffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
