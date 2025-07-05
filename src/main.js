@@ -174,16 +174,29 @@ function handleWaveformMouseMove(event) {
 }
 
 async function init() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function generateSine(sampleRate = 44100) {
+        const duration = 5; // seconds
+        const frequency = 440; // Hz
+        const amplitude = 0.5;
+
+        const length = sampleRate * duration;
+
+        audioBuffer = audioContext.createBuffer(1, length, sampleRate);
+        const channelData = audioBuffer.getChannelData(0);
+
+        for (let i = 0; i < length; i++) {
+            channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * amplitude;
+        }
+
+        return audioBuffer;
     }
 
-    if (!audioBuffer) {
-        const response = await fetch(DEFAULT_SAMPLE_URL);
-        const arrayBuffer = await response.arrayBuffer();
-        const defaultBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        audioBuffer = defaultBuffer;
-        channelData = audioBuffer.getChannelData(0);
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioBuffer) {
+            const audioBuffer = generateSine(audioContext.sampleRate);
+            channelData = audioBuffer.getChannelData(0);
+        }
     }
 
     if (!olaNode) {
