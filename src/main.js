@@ -1,6 +1,8 @@
 import { Waveform } from './waveform.js';
 
 const DEFAULT_SAMPLE_URL = './sine.wav';
+const WAVEFORM_CANVAS_ID = 'waveformCanvas';
+const PLAYHEAD_ID = 'playhead';
 
 let audioContext;
 let audioBuffer;
@@ -20,8 +22,8 @@ document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 
-document.getElementById('waveformCanvas').addEventListener('mousedown', handleMouseDown);
-document.getElementById('waveformCanvas').addEventListener('mousemove', handleWaveformMouseMove);
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 
 
@@ -195,7 +197,7 @@ async function init() {
     }, [channelData.buffer.slice()]);
 
     if (!waveform) {
-        waveform = new Waveform('waveformCanvas', 'playhead');
+        waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
     }
     waveform.plot(audioBuffer);
 }
