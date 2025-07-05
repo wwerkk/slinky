@@ -145,6 +145,9 @@ async function toggleRecording() {
 
 function handleMouseDown(event) {
     isInteracting = true;
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
 }
 
 function handleMouseUp(event) {
@@ -154,6 +157,9 @@ function handleMouseUp(event) {
 function handleTouchStart(event) {
     event.preventDefault();
     isInteracting = true;
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
 }
 
 function handleTouchEnd(event) {
