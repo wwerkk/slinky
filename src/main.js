@@ -44,7 +44,7 @@ function handleDrop(event) {
         }
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-        channelData = audioBuffer.getChannelData(0); // first channel for now
+        channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
 
         waveform.plot(audioBuffer);
     };
