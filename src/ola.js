@@ -29,11 +29,13 @@ class olaProcessor extends AudioWorkletProcessor {
         const { action, buffer, position, rate } = event.data;
 
         if (action === 'updatePosition') {
-            this.playbackRate = rate;
-            // Calculate the exact frame position based on the normalized position
-            const framePosition = Math.floor(position * this.buffer.length);
-            this.createGrain(framePosition);
-            this.isPlaying = true;
+            if (this.buffer) {
+                this.playbackRate = rate;
+                // Calculate the exact frame position based on the normalized position
+                const framePosition = Math.floor(position * this.buffer.length);
+                this.createGrain(framePosition);
+                this.isPlaying = true;
+            }
         } else if (action === 'setBuffer') {
             this.buffer = new Float32Array(buffer);
             this.currentFrame = 0;
@@ -42,7 +44,7 @@ class olaProcessor extends AudioWorkletProcessor {
     }
 
     hannWindow(position, length) {
-        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / ( length - 1))) : 1;
+        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / (length - 1))) : 1;
     }
 
     process(inputs, outputs, parameters) {
