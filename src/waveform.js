@@ -1,4 +1,3 @@
-// waveform-viewer.js
 export class Waveform {
     constructor(canvasId, playheadId) {
         this.canvas = document.getElementById(canvasId);
@@ -30,6 +29,7 @@ export class Waveform {
         this.currentBuffer = buffer; // Store buffer for potential replotting
         this.updateCanvasSize();
 
+        if (!buffer || buffer.numberOfChannels < 1) return;
         const channelData = buffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
@@ -60,7 +60,7 @@ export class Waveform {
     }
 
     updatePlayhead(progress) {
-        const playheadX = progress * this.canvasWidth;
-        this.playhead.style.transform = `translateX(${playheadX}px)`;
+        const playheadX = Math.max(0, Math.min(1, progress)) * this.canvasWidth;
+        if (this.playhead) this.playhead.style.transform = `translateX(${playheadX}px)`;
     }
 }

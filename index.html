@@ -1,75 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Player</title>
-      <style>
-       html, body {
-          margin: 0;
-          padding: 0;
-          height: 100%;
-          width: 100%;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Player</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #waveform {
+        width: 100%;
+        height: 100%;
+        background-color: #f0f0f0;
+        position: relative;
+        overflow: hidden;
+      }
+      #playhead {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 2px;
+        height: 100%;
+        background-color: red;
+        transform: translateX(0);
+        /* transition: transform 0.001s linear delay 0.001; */
+      }
+      #recordButton {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0px solid #000;
+        background-color: #671212;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.2s ease-in-out;
+      }
+      #recordButton:hover {
+        background-color: #b91c1c;
+        transform: scale(1.05);
+      }
+      #recordButton.waiting {
+        background-color: #f5610b;
+        animation: waitingPulse 0.8s infinite;
+      }
+      #recordButton.recording {
+        animation: recordBlink 1s infinite;
+        background-color: #dc2626;
+      }
+      @keyframes waitingPulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
         }
-        #waveform {
-          width: 100%;
-          height: 100%;
-          background-color: #f0f0f0;
-          position: relative;
-          overflow: hidden;
+        50% {
+          opacity: 0.7;
+          transform: scale(1.1);
         }
-        #playhead {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 2px;
-          height: 100%;
-          background-color: red;
-          transform: translateX(0);
-          /* transition: transform 0.001s linear delay 0.001; */
-        }
-        #recordButton {
-          position: absolute;
-          top: 20px;
-          left: 20px;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: 0px solid #000;
-          background-color: #671212;
-          cursor: pointer;
-          z-index: 10;
-          transition: all 0.2s ease-in-out;
-        }
-        #recordButton:hover {
-          background-color: #b91c1c;
-          transform: scale(1.05);
-        }
-        #recordButton.waiting {
-          background-color: #f5610b;
-          animation: waitingPulse 0.8s infinite;
-        }
-        #recordButton.recording {
-          animation: recordBlink 1s infinite;
+      }
+      @keyframes recordBlink {
+        0% {
           background-color: #dc2626;
         }
-        @keyframes waitingPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.1); }
+        50% {
+          background-color: #671212;
         }
-        @keyframes recordBlink {
-          0% { background-color: #dc2626; }
-          50% { background-color: #671212; }
-        }
-      </style>
-    </head>
-    <body>
-      <div id="waveform">
-        <canvas id="waveformCanvas"></canvas>
-        <div id="playhead"></div>
-        <button id="recordButton" title="Record Audio"></button>
-      </div>
-      <script type="module" src="./src/main.js"></script>
-    </body>
-  </html>
+      }
+    </style>
+  </head>
+  <body>
+    <div id="waveform">
+      <canvas id="waveformCanvas"></canvas>
+      <div id="playhead"></div>
+      <button id="recordButton" title="Record Audio"></button>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
 </html>

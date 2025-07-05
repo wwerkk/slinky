@@ -1,4 +1,4 @@
-class olaProcessor extends AudioWorkletProcessor {
+class OlaProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.buffer = null;
@@ -29,34 +29,38 @@ class olaProcessor extends AudioWorkletProcessor {
         const { action, buffer, position, rate } = event.data;
 
         if (action === 'updatePosition') {
-            this.buffer = new Float32Array(buffer);
-            this.playbackRate = rate;
-
-            // Calculate the exact frame position based on the normalized position
-            const framePosition = Math.floor(position * this.buffer.length);
-            this.createGrain(framePosition);
-            this.isPlaying = true;
+            if (this.buffer) {
+                this.playbackRate = rate;
+                // Calculate the exact frame position based on the normalized position
+                const framePosition = Math.floor(position * this.buffer.length);
+                this.createGrain(framePosition);
+                this.isPlaying = true;
+            }
+        } else if (action === 'setBuffer') {
+            this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
+            this.currentFrame = 0;
+            this.grains = [];
         }
     }
 
     hannWindow(position, length) {
-        return 0.5 * (1 - Math.cos((2 * Math.PI * position) / length));
+        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / (length - 1))) : 1;
     }
 
     process(inputs, outputs, parameters) {
         const output = outputs[0];
         const channelCount = output.length;
 
-        if (!this.buffer || !this.isPlaying) return true;
-
         // Clear the output buffer
         for (let channel = 0; channel < channelCount; channel++) {
             output[channel].fill(0);
         }
 
-        // Process each active grain
+        if (!this.buffer || !this.isPlaying) return true;
+
+        const overlapGain = 1 / this.overlap;
         for (let grain of this.grains) {
-            const windowGain = this.hannWindow(grain.age, this.grainSize);
+
 
             for (let i = 0; i < output[0].length; i++) {
                 if (grain.age < this.grainSize) {
@@ -69,7 +73,8 @@ class olaProcessor extends AudioWorkletProcessor {
                         const interpolatedSample = currentSample + fraction * (nextSample - currentSample);
 
                         // Apply window and accumulate to output
-                        const sample = interpolatedSample * (1 / this.overlap);
+                        const windowGain = this.hannWindow(grain.age, this.grainSize);
+                        const sample = interpolatedSample * overlapGain * windowGain;
                         for (let channel = 0; channel < channelCount; channel++) {
                             output[channel][i] += sample;
                         }
@@ -91,4 +96,4 @@ class olaProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('ola-processor', olaProcessor);
+registerProcessor('ola-processor', OlaProcessor);
