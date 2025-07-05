@@ -13,7 +13,7 @@ let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
 
-let mouseDown = false;
+let isInteracting = false;
 let lastX = null;
 let lastTime = null;
 
@@ -25,6 +25,10 @@ recordButton.addEventListener('click', toggleRecording);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
+
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchmove', handleTouchMove);
+document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
 
 
 init();
@@ -140,33 +144,58 @@ async function toggleRecording() {
 }
 
 function handleMouseDown(event) {
-    mouseDown = true;
-    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+    isInteracting = true;
 }
 
 function handleMouseUp(event) {
-    mouseDown = false;
+    isInteracting = false;
+}
+
+function handleTouchStart(event) {
+    event.preventDefault();
+    isInteracting = true;
+}
+
+function handleTouchEnd(event) {
+    event.preventDefault();
+    isInteracting = false;
+}
+
+function handleTouchMove(event) {
+    event.preventDefault(); // Prevent default touch behavior like scrolling
+    if (!audioBuffer || !isInteracting) return;
+
+    const touch = event.touches[0];
+    const rect = event.target.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    
+    updateWaveformPosition(x, rect.width);
 }
 
 function handleWaveformMouseMove(event) {
-    if (!audioBuffer || !mouseDown) return;
+    if (!audioBuffer || !isInteracting) return;
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
+    
+    updateWaveformPosition(x, rect.width);
+}
+
+function updateWaveformPosition(x, width) {
     const currentTime = performance.now();
-    const position = Math.max(0, Math.min(1, x / rect.width));
-    let mouseSpeed = 0;
+    const position = Math.max(0, Math.min(1, x / width));
+    let speed = 0;
 
     if (lastX !== null && lastTime !== null) {
         const dx = x - lastX;
         const dt = currentTime - lastTime;
-        mouseSpeed = dx / dt; // pixels/ms
+        speed = dx / dt; // pixels/ms
     }
 
     olaNode.port.postMessage({
         action: 'updatePosition',
         position: position,
-        rate: mouseSpeed
+        rate: speed
     });
 
     waveform.updatePlayhead(position);
