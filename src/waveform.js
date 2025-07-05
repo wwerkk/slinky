@@ -4,13 +4,20 @@ export class Waveform {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
-        this.canvasWidth = this.canvas.offsetWidth;
-        this.canvasHeight = this.canvas.offsetHeight;
+        this.updateCanvasSize();
+    }
+
+    updateCanvasSize() {
+        const container = this.canvas.parentElement;
+        this.canvasWidth = container.clientWidth;
+        this.canvasHeight = container.clientHeight;
         this.canvas.width = this.canvasWidth;
         this.canvas.height = this.canvasHeight;
     }
 
     plot(buffer) {
+        this.updateCanvasSize();
+        
         const channelData = buffer.getChannelData(0); // Use the first channel
         const step = Math.ceil(channelData.length / this.canvasWidth);
         const amp = this.canvasHeight / 2;
