@@ -3,7 +3,7 @@ import { Waveform } from './waveform.js';
 let audioContext;
 let audioBuffer;
 let channelData;
-let grainletNode;
+let olaNode;
 let waveform;
 
 let mouseDown = false;
@@ -45,10 +45,10 @@ async function loadAudioFile(file) {
 
     waveform.plot(audioBuffer);
 
-    if (!grainletNode) {
-        await audioContext.audioWorklet.addModule('./src/grain.js');
-        grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
-        grainletNode.connect(audioContext.destination);
+    if (!olaNode) {
+        await audioContext.audioWorklet.addModule('./src/ola.js');
+        olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
+        olaNode.connect(audioContext.destination);
     }
 }
 
@@ -106,10 +106,10 @@ async function startRecording() {
                 channelData = audioBuffer.getChannelData(0);
                 waveform.plot(audioBuffer);
                 
-                if (!grainletNode) {
-                    await audioContext.audioWorklet.addModule('./src/grain.js');
-                    grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
-                    grainletNode.connect(audioContext.destination);
+                if (!olaNode) {
+                    await audioContext.audioWorklet.addModule('./src/ola.js');
+                    olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
+                    olaNode.connect(audioContext.destination);
                 }
             } catch (error) {
                 console.error('Error decoding recorded audio:', error);
@@ -168,7 +168,7 @@ function handleWaveformDrag(event) {
 
 
     // Send the current position and playbackRate to the processor
-    grainletNode.port.postMessage({
+    olaNode.port.postMessage({
         action: 'updatePosition',
         buffer: channelData.buffer,
         position: position,
@@ -208,7 +208,7 @@ async function initializeDefaultBuffer() {
     waveform = new Waveform('waveformCanvas', 'playhead');
     waveform.plot(defaultBuffer);
 
-    await audioContext.audioWorklet.addModule('./src/grain.js');
-    grainletNode = new AudioWorkletNode(audioContext, 'grain-processor');
-    grainletNode.connect(audioContext.destination);
+    await audioContext.audioWorklet.addModule('./src/ola.js');
+    olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
+    olaNode.connect(audioContext.destination);
 }

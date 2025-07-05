@@ -1,4 +1,4 @@
-class GrainProcessor extends AudioWorkletProcessor {
+class olaProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.buffer = null;
@@ -12,6 +12,19 @@ class GrainProcessor extends AudioWorkletProcessor {
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
+    createGrain(startFrame) {
+        // Remove finished grains
+        this.grains = this.grains.filter(grain => grain.age < this.grainSize);
+
+        if (this.grains.length < this.overlap) {
+            this.grains.push({
+                startFrame,
+                age: 0,
+                position: startFrame
+            });
+        }
+    }
+
     handleMessage(event) {
         const { action, buffer, position, rate } = event.data;
 
@@ -21,24 +34,8 @@ class GrainProcessor extends AudioWorkletProcessor {
 
             // Calculate the exact frame position based on the normalized position
             const framePosition = Math.floor(position * this.buffer.length);
-
-            // Create a new grain
             this.createGrain(framePosition);
             this.isPlaying = true;
-        }
-    }
-
-    createGrain(startFrame) {
-        // Remove finished grains
-        this.grains = this.grains.filter(grain => grain.age < this.grainSize);
-
-        // Add new grain if we don't have too many
-        if (this.grains.length < this.overlap) {
-            this.grains.push({
-                startFrame,
-                age: 0,
-                position: startFrame
-            });
         }
     }
 
@@ -66,7 +63,6 @@ class GrainProcessor extends AudioWorkletProcessor {
                     const readPosition = Math.floor(grain.position);
 
                     if (readPosition >= 0 && readPosition < this.buffer.length - 1) {
-                        // Linear interpolation
                         const fraction = grain.position - readPosition;
                         const currentSample = this.buffer[readPosition];
                         const nextSample = this.buffer[readPosition + 1];
@@ -95,4 +91,4 @@ class GrainProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('grain-processor', GrainProcessor);
+registerProcessor('ola-processor', olaProcessor);
