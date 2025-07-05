@@ -1,4 +1,3 @@
-// waveform-viewer.js
 export class Waveform {
     constructor(canvasId, playheadId) {
         this.canvas = document.getElementById(canvasId);
