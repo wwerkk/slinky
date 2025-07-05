@@ -141,6 +141,7 @@ async function toggleRecording() {
 
 function handleMouseDown(event) {
     mouseDown = true;
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
 }
 
 function handleMouseUp(event) {
