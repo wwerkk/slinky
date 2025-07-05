@@ -82,16 +82,13 @@ function handleWaveformDrag(event) {
         mouseSpeed = dx / dt; // pixels/ms
     }
 
-    // Scale the playback rate based on mouse speed
-    const speedScale = 0.1; // Adjust this value to taste
-    const playbackRate = mouseSpeed * speedScale;
 
-    // Send the current position and rate to the processor
+    // Send the current position and playbackRate to the processor
     grainletNode.port.postMessage({
         action: 'updatePosition',
         buffer: channelData.buffer,
         position: position,
-        rate: playbackRate
+        rate: mouseSpeed
     }, [channelData.buffer.slice()]);
 
     // Update visual feedback
