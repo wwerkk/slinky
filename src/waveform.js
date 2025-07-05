@@ -19,17 +19,31 @@ export class Waveform {
         this.updateCanvasSize();
         
         const channelData = buffer.getChannelData(0); // Use the first channel
-        const step = Math.ceil(channelData.length / this.canvasWidth);
+        const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
 
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        
+        this.ctx.strokeStyle = 'black';
+        this.ctx.lineWidth = 1;
+        this.ctx.lineCap = 'round';
+        
         this.ctx.beginPath();
+        
         for (let i = 0; i < this.canvasWidth; i++) {
-            const min = Math.min(...channelData.slice(i * step, (i + 1) * step));
-            const max = Math.max(...channelData.slice(i * step, (i + 1) * step));
-            this.ctx.moveTo(i, amp - min * amp);
-            this.ctx.lineTo(i, amp - max * amp);
+            const sampleIndex = Math.floor((i * dataLength) / this.canvasWidth);
+            const sample = channelData[sampleIndex] || 0;
+            
+            const x = i;
+            const y = amp + (sample * amp);
+            
+            if (i === 0) {
+                this.ctx.moveTo(x, y);
+            } else {
+                this.ctx.lineTo(x, y);
+            }
         }
+        
         this.ctx.stroke();
     }
 
