@@ -193,10 +193,6 @@ function handleTouchMove(event) {
     const x = touch.clientX - rect.left;
 
     updateWaveformPosition(x, rect.width);
-
-    if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
 }
 
 function handleWaveformMouseMove(event) {
