@@ -13,7 +13,7 @@ let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
 
-let mouseDown = false;
+let isInteracting = false;
 let lastX = null;
 let lastTime = null;
 
@@ -21,10 +21,15 @@ document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
+recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
+
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchmove', handleTouchMove);
+document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
 
 
 init();
@@ -120,6 +125,15 @@ async function toggleRecording() {
             console.error('Error accessing microphone:', error);
             // Remove waiting state if microphone access fails
             recordButton.classList.remove('waiting');
+
+            // Show error messages for debugging
+            if (error.name === 'NotAllowedError') {
+                alert('Microphone access denied. Please allow microphone access and try again.');
+            } else if (error.name === 'NotFoundError') {
+                alert('No microphone found. Please check your device settings.');
+            } else {
+                alert('Could not access microphone. Please try again.');
+            }
         }
     }
     function stopRecording() {
@@ -139,34 +153,72 @@ async function toggleRecording() {
     }
 }
 
+function handleRecordButtonTouch(event) {
+    event.preventDefault(); // Prevent default touch behavior
+    event.stopPropagation(); // Stop event bubbling
+    toggleRecording();
+}
+
+function beginInteraction() {
+    isInteracting = true;
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
 function handleMouseDown(event) {
-    mouseDown = true;
-    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+    beginInteraction();
 }
 
 function handleMouseUp(event) {
-    mouseDown = false;
+    isInteracting = false;
+}
+
+function handleTouchStart(event) {
+    event.preventDefault();
+    beginInteraction();
+}
+
+function handleTouchEnd(event) {
+    event.preventDefault();
+    isInteracting = false;
+}
+
+function handleTouchMove(event) {
+    event.preventDefault(); // Prevent default touch behavior like scrolling
+    if (!audioBuffer || !isInteracting) return;
+
+    const touch = event.touches[0];
+    const rect = event.target.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+
+    updateWaveformPosition(x, rect.width);
 }
 
 function handleWaveformMouseMove(event) {
-    if (!audioBuffer || !mouseDown) return;
+    if (!audioBuffer || !isInteracting) return;
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
+
+    updateWaveformPosition(x, rect.width);
+}
+
+function updateWaveformPosition(x, width) {
     const currentTime = performance.now();
-    const position = Math.max(0, Math.min(1, x / rect.width));
-    let mouseSpeed = 0;
+    const position = Math.max(0, Math.min(1, x / width));
+    let speed = 0;
 
     if (lastX !== null && lastTime !== null) {
         const dx = x - lastX;
         const dt = currentTime - lastTime;
-        mouseSpeed = dx / dt; // pixels/ms
+        speed = dx / dt; // pixels/ms
     }
 
     olaNode.port.postMessage({
         action: 'updatePosition',
         position: position,
-        rate: mouseSpeed
+        rate: speed
     });
 
     waveform.updatePlayhead(position);
