@@ -47,6 +47,19 @@ class OlaProcessor extends AudioWorkletProcessor {
         return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / (length - 1))) : 1;
     }
 
+    cubicInterpolate(y0, y1, y2, y3, mu) {
+        // Catmull-Rom spline interpolation
+        const mu2 = mu * mu;
+        const mu3 = mu2 * mu;
+        
+        const a0 = -0.5 * y0 + 1.5 * y1 - 1.5 * y2 + 0.5 * y3;
+        const a1 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
+        const a2 = -0.5 * y0 + 0.5 * y2;
+        const a3 = y1;
+        
+        return a0 * mu3 + a1 * mu2 + a2 * mu + a3;
+    }
+
     process(inputs, outputs, parameters) {
         const output = outputs[0];
         const channelCount = output.length;
@@ -66,11 +79,17 @@ class OlaProcessor extends AudioWorkletProcessor {
                 if (grain.age < this.grainSize) {
                     const readPosition = Math.floor(grain.position);
 
-                    if (readPosition >= 0 && readPosition < this.buffer.length - 1) {
+                    if (readPosition >= 1 && readPosition < this.buffer.length - 2) {
                         const fraction = grain.position - readPosition;
-                        const currentSample = this.buffer[readPosition];
-                        const nextSample = this.buffer[readPosition + 1];
-                        const interpolatedSample = currentSample + fraction * (nextSample - currentSample);
+                        
+                        // Get 4 samples for cubic interpolation
+                        const y0 = this.buffer[readPosition - 1];
+                        const y1 = this.buffer[readPosition];
+                        const y2 = this.buffer[readPosition + 1];
+                        const y3 = this.buffer[readPosition + 2];
+                        
+                        // Cubic interpolation using Catmull-Rom spline
+                        const interpolatedSample = this.cubicInterpolate(y0, y1, y2, y3, fraction);
 
                         // Apply window and accumulate to output
                         const windowGain = this.hannWindow(grain.age, this.grainSize);
