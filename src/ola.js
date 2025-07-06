@@ -74,7 +74,7 @@ class OlaProcessor extends AudioWorkletProcessor {
 
                         // Apply window and accumulate to output
                         const windowGain = this.hannWindow(grain.age, this.grainSize);
-                        const sample = interpolatedSample * overlapGain * windowGain;
+                        const sample = interpolatedSample * overlapGain;
                         for (let channel = 0; channel < channelCount; channel++) {
                             output[channel][i] += sample;
                         }
