@@ -159,11 +159,15 @@ function handleRecordButtonTouch(event) {
     toggleRecording();
 }
 
-function handleMouseDown(event) {
+function beginInteraction() {
     isInteracting = true;
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
+}
+
+function handleMouseDown(event) {
+    beginInteraction();
 }
 
 function handleMouseUp(event) {
@@ -172,11 +176,7 @@ function handleMouseUp(event) {
 
 function handleTouchStart(event) {
     event.preventDefault();
-    isInteracting = true;
-    
-    if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
+    beginInteraction();
 }
 
 function handleTouchEnd(event) {
