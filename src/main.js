@@ -21,7 +21,7 @@ document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
-recordButton.addEventListener('touchstart', handleRecordButtonTouch);
+recordButton.addEventListener('touchend', handleRecordButtonTouch);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
@@ -75,7 +75,13 @@ async function toggleRecording() {
             // Show waiting state immediately when clicked
             recordButton.classList.add('waiting');
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Safari requires getUserMedia to be called synchronously with user gesture
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false
+                }
+            });
             recordedChunks = [];
 
             mediaRecorder = new MediaRecorder(stream);
@@ -154,8 +160,8 @@ async function toggleRecording() {
 }
 
 function handleRecordButtonTouch(event) {
-    event.preventDefault(); // Prevent default touch behavior
-    event.stopPropagation(); // Stop event bubbling
+    event.preventDefault();
+    event.stopPropagation();
     toggleRecording();
 }
 
