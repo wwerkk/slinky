@@ -5,9 +5,13 @@ class OlaProcessor extends AudioWorkletProcessor {
         this.currentFrame = 0;
         this.playbackRate = 1;
         this.isPlaying = false;
-        this.grainSize = 2048;
+        this.grainSize = 4096;
         this.overlap = 128;
         this.grains = [];
+
+        this.smoothedPosition = 0;
+        this.smoothingFactor = 0.02;
+        this.targetPosition = 0;
 
         this.port.onmessage = (event) => this.handleMessage(event);
     }
@@ -31,15 +35,16 @@ class OlaProcessor extends AudioWorkletProcessor {
         if (action === 'updatePosition') {
             if (this.buffer) {
                 this.playbackRate = rate;
-                // Calculate the exact frame position based on the normalized position
-                const framePosition = Math.floor(position * this.buffer.length);
-                this.createGrain(framePosition);
+                // Store target position for smoothing
+                this.targetPosition = position * this.buffer.length;
                 this.isPlaying = true;
             }
         } else if (action === 'setBuffer') {
             this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
             this.currentFrame = 0;
             this.grains = [];
+            this.smoothedPosition = 0;
+            this.targetPosition = 0;
         }
     }
 
@@ -70,6 +75,9 @@ class OlaProcessor extends AudioWorkletProcessor {
         }
 
         if (!this.buffer || !this.isPlaying) return true;
+
+        this.smoothedPosition += (this.targetPosition - this.smoothedPosition) * this.smoothingFactor;
+        this.createGrain(Math.floor(this.smoothedPosition));
 
         for (let grain of this.grains) {
 
