@@ -21,6 +21,7 @@ document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
+recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
@@ -124,6 +125,15 @@ async function toggleRecording() {
             console.error('Error accessing microphone:', error);
             // Remove waiting state if microphone access fails
             recordButton.classList.remove('waiting');
+
+            // Show error messages for debugging
+            if (error.name === 'NotAllowedError') {
+                alert('Microphone access denied. Please allow microphone access and try again.');
+            } else if (error.name === 'NotFoundError') {
+                alert('No microphone found. Please check your device settings.');
+            } else {
+                alert('Could not access microphone. Please try again.');
+            }
         }
     }
     function stopRecording() {
@@ -141,6 +151,12 @@ async function toggleRecording() {
     } else {
         stopRecording();
     }
+}
+
+function handleRecordButtonTouch(event) {
+    event.preventDefault(); // Prevent default touch behavior
+    event.stopPropagation(); // Stop event bubbling
+    toggleRecording();
 }
 
 function handleMouseDown(event) {
