@@ -5,8 +5,8 @@ class OlaProcessor extends AudioWorkletProcessor {
         this.currentFrame = 0;
         this.playbackRate = 1;
         this.isPlaying = false;
-        this.grainSize = 2048; // About 46ms at 44.1kHz
-        this.overlap = 4; // Number of overlapping grains
+        this.grainSize = 4096
+        this.overlap = 64;
         this.grains = [];
 
         this.port.onmessage = (event) => this.handleMessage(event);
@@ -58,8 +58,8 @@ class OlaProcessor extends AudioWorkletProcessor {
 
         if (!this.buffer || !this.isPlaying) return true;
 
-        const overlapGain = 1 / this.overlap;
         for (let grain of this.grains) {
+            const overlapGain = 1 / this.grains.length;
 
 
             for (let i = 0; i < output[0].length; i++) {
