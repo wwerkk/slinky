@@ -5,7 +5,7 @@ class OlaProcessor extends AudioWorkletProcessor {
         this.currentFrame = 0;
         this.playbackRate = 1;
         this.isPlaying = false;
-        this.grainSize = 4096
+        this.grainSize = 4096;
         this.overlap = 64;
         this.grains = [];
 
