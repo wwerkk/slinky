@@ -48,8 +48,8 @@ class OlaProcessor extends AudioWorkletProcessor {
         }
     }
 
-    hannWindow(position, length) {
-        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * position) / (length - 1))) : 1;
+    hannWindow(t, length) {
+        return length > 1 ? 0.5 * (1 - Math.cos((2 * Math.PI * t) / (length - 1))) : 1;
     }
 
     cubicInterpolate(y0, y1, y2, y3, mu) {
