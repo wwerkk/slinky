@@ -205,25 +205,14 @@ function handleWaveformMouseMove(event) {
 }
 
 function updateWaveformPosition(x, width) {
-    const currentTime = performance.now();
     const position = Math.max(0, Math.min(1, x / width));
-    let speed = 0;
 
-    if (lastX !== null && lastTime !== null) {
-        const dx = x - lastX;
-        const dt = currentTime - lastTime;
-        speed = dx / dt; // pixels/ms
-    }
-
-    olaNode.port.postMessage({
+    samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: position,
-        rate: speed
+        position: position
     });
 
     waveform.updatePlayhead(position);
-    lastX = x;
-    lastTime = currentTime;
 }
 
 async function init() {
