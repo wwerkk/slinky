@@ -1,14 +1,14 @@
 class SamplerProcessor extends AudioWorkletProcessor {
-    constructor() {
-        super();
-        this.buffer = null;
-        this.targetPosition = 0;
-        this.currentPosition = 0;
-        this.isPlaying = false;
-        this.smoothingFactor = 0.0001; // How fast to catch up (0.0-1.0)
-
-        this.port.onmessage = (event) => this.handleMessage(event);
-    }
+constructor() {
+    super();
+    this.buffer = null;
+    this.targetPosition = 0;
+    this.currentPosition = 0;
+    this.isPlaying = false;
+    this.smoothingFactor = 0.0001;
+    
+    this.port.onmessage = (event) => this.handleMessage(event);
+}
 
     handleMessage(event) {
         const { action, buffer, position } = event.data;
@@ -25,6 +25,14 @@ class SamplerProcessor extends AudioWorkletProcessor {
             this.currentPosition = 0;
             this.isPlaying = false;
         }
+    }
+
+    cubicInterpolate(y0, y1, y2, y3, mu) {
+        const a0 = y3 - y2 - y0 + y1;
+        const a1 = y0 - y1 - a0;
+        const a2 = y2 - y0;
+        const a3 = y1;
+        return a0 * mu * mu * mu + a1 * mu * mu + a2 * mu + a3;
     }
 
     process(inputs, outputs, parameters) {
@@ -44,7 +52,13 @@ class SamplerProcessor extends AudioWorkletProcessor {
             const fraction = this.currentPosition - index;
 
             let sample = 0;
-            if (index >= 0 && index < this.buffer.length - 1) {
+            if (index >= 1 && index < this.buffer.length - 2) {
+                const y0 = this.buffer[index - 1];
+                const y1 = this.buffer[index];
+                const y2 = this.buffer[index + 1];
+                const y3 = this.buffer[index + 2];
+                sample = this.cubicInterpolate(y0, y1, y2, y3, fraction);
+            } else if (index >= 0 && index < this.buffer.length - 1) {
                 sample = this.buffer[index] * (1 - fraction) + this.buffer[index + 1] * fraction;
             } else if (index >= 0 && index < this.buffer.length) {
                 sample = this.buffer[index];
