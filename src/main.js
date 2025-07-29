@@ -7,7 +7,7 @@ const PLAYHEAD_ID = 'playhead';
 let audioContext;
 let audioBuffer;
 let channelData;
-let olaNode;
+let samplerNode;
 let waveform;
 let mediaRecorder;
 let recordedChunks = [];
@@ -53,8 +53,8 @@ async function handleDrop(event) {
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
-        if (olaNode) {
-            olaNode.port.postMessage({
+        if (samplerNode) {
+            samplerNode.port.postMessage({
                 action: 'setBuffer',
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
@@ -104,8 +104,8 @@ async function toggleRecording() {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
                     audioBuffer = recordedBuffer;
                     channelData = audioBuffer.getChannelData(0);
-                    if (olaNode) {
-                        olaNode.port.postMessage({
+                    if (samplerNode) {
+                        samplerNode.port.postMessage({
                             action: 'setBuffer',
                             buffer: channelData.buffer
                         }, [channelData.buffer.slice()]);
@@ -205,25 +205,14 @@ function handleWaveformMouseMove(event) {
 }
 
 function updateWaveformPosition(x, width) {
-    const currentTime = performance.now();
     const position = Math.max(0, Math.min(1, x / width));
-    let speed = 0;
 
-    if (lastX !== null && lastTime !== null) {
-        const dx = x - lastX;
-        const dt = currentTime - lastTime;
-        speed = dx / dt; // pixels/ms
-    }
-
-    olaNode.port.postMessage({
+    samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: position,
-        rate: speed
+        position: position
     });
 
     waveform.updatePlayhead(position);
-    lastX = x;
-    lastTime = currentTime;
 }
 
 async function init() {
@@ -252,12 +241,12 @@ async function init() {
         }
     }
 
-    if (!olaNode) {
-        await audioContext.audioWorklet.addModule('./src/ola.js');
-        olaNode = new AudioWorkletNode(audioContext, 'ola-processor');
-        olaNode.connect(audioContext.destination);
+    if (!samplerNode) {
+        await audioContext.audioWorklet.addModule('./src/sampler.js');
+        samplerNode = new AudioWorkletNode(audioContext, 'sampler-processor');
+        samplerNode.connect(audioContext.destination);
     }
-    olaNode.port.postMessage({
+    samplerNode.port.postMessage({
         action: 'setBuffer',
         buffer: channelData.buffer
     }, [channelData.buffer.slice()]);
