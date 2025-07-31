@@ -15,7 +15,7 @@ let isRecording = false;
 
 let isInteracting = false;
 
-document.addEventListener('dragover', handleDragOver);
+document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
@@ -37,10 +37,6 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('drag', (event) => 
 });
 
 init();
-
-function handleDragOver(event) {
-    event.preventDefault();
-}
 
 async function handleDrop(event) {
     const loadAudioFile = async (file) => {
