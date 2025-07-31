@@ -4,8 +4,8 @@ class SamplerProcessor extends AudioWorkletProcessor {
         this.buffer = null;
         this.targetPosition = 0;
         this.currentPosition = 0;
-        this.isPlaying = false;
         this.smoothingFactor = 0.0001;
+        this.isPlaying = false;
 
         this.port.onmessage = (event) => this.handleMessage(event);
     }
