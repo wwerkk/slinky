@@ -29,6 +29,12 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handl
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchmove', handleTouchMove);
 document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
 
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('dragstart', (event) => {
+    event.preventDefault();
+});
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('drag', (event) => {
+    event.preventDefault();
+});
 
 init();
 
