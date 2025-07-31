@@ -35,7 +35,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
         }
     }
 
-    cubicInterpolate(y0, y1, y2, y3, mu) {
+    cubicSpline(y0, y1, y2, y3, mu) {
         const a0 = y3 - y2 - y0 + y1;
         const a1 = y0 - y1 - a0;
         const a2 = y2 - y0;
@@ -79,7 +79,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
                 const y1 = this.buffer[index];
                 const y2 = this.buffer[index + 1];
                 const y3 = this.buffer[index + 2];
-                sample = this.cubicInterpolate(y0, y1, y2, y3, fraction);
+                sample = this.cubicSpline(y0, y1, y2, y3, fraction);
             } else if (index >= 0 && index < this.buffer.length - 1) {
                 sample = this.buffer[index] * (1 - fraction) + this.buffer[index + 1] * fraction;
             } else if (index >= 0 && index < this.buffer.length) {
