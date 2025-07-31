@@ -20,6 +20,14 @@
         overflow: hidden;
         touch-action: none; /* Disable default touch behaviors */
       }
+      #waveformCanvas {
+        user-select: none; /* Prevent text selection */
+        -webkit-user-drag: none; /* Prevent dragging in webkit browsers */
+        -webkit-user-select: none; /* Prevent selection in webkit browsers */
+        -moz-user-select: none; /* Prevent selection in Firefox */
+        -ms-user-select: none; /* Prevent selection in IE/Edge */
+        pointer-events: auto; /* Ensure pointer events work */
+      }
       #playhead {
         position: absolute;
         top: 0;
