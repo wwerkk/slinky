@@ -14,8 +14,6 @@ let recordedChunks = [];
 let isRecording = false;
 
 let isInteracting = false;
-let lastX = null;
-let lastTime = null;
 
 document.addEventListener('dragover', handleDragOver);
 document.addEventListener('drop', handleDrop);
