@@ -66,7 +66,9 @@ class SamplerProcessor extends AudioWorkletProcessor {
                 this.historyCount++;
             }
             this.currentPosition = this.runningSum / this.historyCount;
-            this.currentPosition = Math.max(0, Math.min(this.buffer.length - 1, this.currentPosition));
+            this.currentPosition = this.currentPosition < 0 ? 0 :
+                this.currentPosition > this.bufferLengthMinus1 ? this.bufferLengthMinus1
+                    : this.currentPosition;
 
             const index = Math.floor(this.currentPosition);
             const fraction = this.currentPosition - index;
