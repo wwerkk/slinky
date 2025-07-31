@@ -4,12 +4,13 @@ class SamplerProcessor extends AudioWorkletProcessor {
         this.buffer = null;
         this.targetPosition = 0;
         this.currentPosition = 0;
-        this.smoothingFactor = 0.0001;
         this.isPlaying = false;
 
-        this.positionBuffer = new Float32Array(8);
-        this.bufferIndex = 0;
-        this.bufferFilled = false;
+        this.historySize = sampleRate * 0.2; // 200ms history
+        this.positionHistory = new Float32Array(this.historySize);
+        this.historyIndex = 0;
+        this.historyCount = 0;
+        this.runningSum = 0;
 
         this.port.onmessage = (event) => this.handleMessage(event);
     }
@@ -19,18 +20,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
         if (action === 'updatePosition') {
             if (this.buffer) {
-                const newPosition = position * this.buffer.length;
-
-                this.positionBuffer[this.bufferIndex] = newPosition;
-                this.bufferIndex = (this.bufferIndex + 1) % this.positionBuffer.length;
-                if (this.bufferIndex === 0) this.bufferFilled = true;
-
-                const count = this.bufferFilled ? this.positionBuffer.length : this.bufferIndex;
-                let sum = 0;
-                for (let i = 0; i < count; i++) {
-                    sum += this.positionBuffer[i];
-                }
-                this.targetPosition = sum / count;
+                this.targetPosition = position * (this.buffer.length - 1);
 
                 this.isPlaying = true;
             }
@@ -38,9 +28,9 @@ class SamplerProcessor extends AudioWorkletProcessor {
             this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
             this.targetPosition = 0;
             this.currentPosition = 0;
-            this.positionBuffer.fill(0);
-            this.bufferIndex = 0;
-            this.bufferFilled = false;
+            this.historyIndex = 0;
+            this.historyCount = 0;
+            this.runningSum = 0;
             this.isPlaying = false;
         }
     }
@@ -64,7 +54,19 @@ class SamplerProcessor extends AudioWorkletProcessor {
         if (!this.buffer || !this.isPlaying) return true;
 
         for (let i = 0; i < output[0].length; i++) {
-            this.currentPosition += (this.targetPosition - this.currentPosition) * this.smoothingFactor;
+            if (this.historyCount === this.historySize) {
+                this.runningSum -= this.positionHistory[this.historyIndex];
+            }
+
+            this.positionHistory[this.historyIndex] = this.targetPosition;
+            this.runningSum += this.targetPosition;
+
+            this.historyIndex = (this.historyIndex + 1) % this.historySize;
+            if (this.historyCount < this.historySize) {
+                this.historyCount++;
+            }
+            this.currentPosition = this.runningSum / this.historyCount;
+            this.currentPosition = Math.max(0, Math.min(this.buffer.length - 1, this.currentPosition));
 
             const index = Math.floor(this.currentPosition);
             const fraction = this.currentPosition - index;
