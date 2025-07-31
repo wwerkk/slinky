@@ -7,6 +7,10 @@ class SamplerProcessor extends AudioWorkletProcessor {
         this.smoothingFactor = 0.0001;
         this.isPlaying = false;
 
+        this.positionBuffer = new Float32Array(8);
+        this.bufferIndex = 0;
+        this.bufferFilled = false;
+
         this.port.onmessage = (event) => this.handleMessage(event);
     }
 
@@ -15,7 +19,18 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
         if (action === 'updatePosition') {
             if (this.buffer) {
-                this.targetPosition = position * (this.buffer.length - 1);
+                const newPosition = position * this.buffer.length;
+
+                this.positionBuffer[this.bufferIndex] = newPosition;
+                this.bufferIndex = (this.bufferIndex + 1) % this.positionBuffer.length;
+                if (this.bufferIndex === 0) this.bufferFilled = true;
+
+                const count = this.bufferFilled ? this.positionBuffer.length : this.bufferIndex;
+                let sum = 0;
+                for (let i = 0; i < count; i++) {
+                    sum += this.positionBuffer[i];
+                }
+                this.targetPosition = sum / count;
 
                 this.isPlaying = true;
             }
@@ -23,6 +38,9 @@ class SamplerProcessor extends AudioWorkletProcessor {
             this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
             this.targetPosition = 0;
             this.currentPosition = 0;
+            this.positionBuffer.fill(0);
+            this.bufferIndex = 0;
+            this.bufferFilled = false;
             this.isPlaying = false;
         }
     }
