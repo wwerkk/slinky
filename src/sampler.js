@@ -6,7 +6,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
         this.currentPosition = 0;
         this.isPlaying = false;
 
-        this.historySize = sampleRate * 0.2; // 200ms history
+        this.historySize = Math.floor(sampleRate * 0.2); // 200ms history
         this.positionHistory = new Array(this.historySize);
         this.historyIndex = 0;
         this.historyCount = 0;
