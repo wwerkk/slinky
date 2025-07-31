@@ -35,12 +35,31 @@ class SamplerProcessor extends AudioWorkletProcessor {
         }
     }
 
-    cubicSpline(y0, y1, y2, y3, mu) {
-        const a0 = y3 - y2 - y0 + y1;
-        const a1 = y0 - y1 - a0;
-        const a2 = y2 - y0;
-        const a3 = y1;
-        return a0 * mu * mu * mu + a1 * mu * mu + a2 * mu + a3;
+    hermiteSpline(position) {
+        const index = Math.floor(position);
+        const fraction = position - index;
+
+        if (index < 1 || index >= this.buffer.length - 2) {
+            if (index >= 0 && index < this.buffer.length - 1) {
+                return this.buffer[index] * (1 - fraction) + this.buffer[index + 1] * fraction;
+            }
+            return index >= 0 && index < this.buffer.length ? this.buffer[index] : 0;
+        }
+
+        const y0 = this.buffer[index - 1];
+        const y1 = this.buffer[index];
+        const y2 = this.buffer[index + 1];
+        const y3 = this.buffer[index + 2];
+
+        const t = fraction;
+        const t2 = t * t;
+
+        // Optimized computation
+        const a = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
+        const b = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
+        const c = 0.5 * (y2 - y0);
+
+        return ((a * t + b) * t + c) * t + y1;
     }
 
     process(inputs, outputs, parameters) {
@@ -70,21 +89,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
                 this.currentPosition > this.bufferLengthMinus1 ? this.bufferLengthMinus1
                     : this.currentPosition;
 
-            const index = Math.floor(this.currentPosition);
-            const fraction = this.currentPosition - index;
-
-            let sample = 0;
-            if (index >= 1 && index < this.buffer.length - 2) {
-                const y0 = this.buffer[index - 1];
-                const y1 = this.buffer[index];
-                const y2 = this.buffer[index + 1];
-                const y3 = this.buffer[index + 2];
-                sample = this.cubicSpline(y0, y1, y2, y3, fraction);
-            } else if (index >= 0 && index < this.buffer.length - 1) {
-                sample = this.buffer[index] * (1 - fraction) + this.buffer[index + 1] * fraction;
-            } else if (index >= 0 && index < this.buffer.length) {
-                sample = this.buffer[index];
-            }
+            let sample = this.hermiteSpline(this.currentPosition);
 
             for (let channel = 0; channel < channelCount; channel++) {
                 output[channel][i] = sample;
