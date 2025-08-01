@@ -1,6 +1,5 @@
 import { Waveform } from './waveform.js';
 
-const DEFAULT_SAMPLE_URL = './sine.wav';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
