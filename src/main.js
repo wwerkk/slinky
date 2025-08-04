@@ -206,6 +206,7 @@ function handleInteraction(x, width) {
     });
 
     positionSliderValue.textContent = currentPosition.toFixed(2);
+    positionSlider.value = currentPosition.toFixed(2);
     waveform.plot(audioBuffer, currentPosition);
     lastX = x;
 }
