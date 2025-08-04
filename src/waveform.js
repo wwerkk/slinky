@@ -41,10 +41,10 @@ export class Waveform {
             const samplePosition = (i * dataLength) / upscaledWidth;
             
             let sample;
-            if (samplePosition >= dataLength - 1) {
-                sample = channelData[dataLength - 1] || 0;
-            } else if (samplePosition <= 0) {
+            if (samplePosition <= 0) {
                 sample = channelData[0] || 0;
+            } else if (samplePosition >= dataLength - 1) {
+                sample = channelData[dataLength - 1] || 0;
             } else {
                 const lowerIndex = Math.floor(samplePosition);
                 const upperIndex = Math.ceil(samplePosition);
