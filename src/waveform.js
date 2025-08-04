@@ -36,10 +36,11 @@ export class Waveform {
 
         const amp = this.canvasHeight / 2;
         const upscaledWidth = this.canvasWidth * this.upscaleFactor;
+        const samplesPerPixel = dataLength / upscaledWidth;
 
         const waveformPoints = [];
         for (let i = 0; i < upscaledWidth; i++) {
-            const samplePosition = (i * dataLength) / upscaledWidth;
+            const samplePosition = i * samplesPerPixel;
 
             let sample;
             if (samplePosition <= 0) {
