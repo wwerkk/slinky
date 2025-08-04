@@ -84,7 +84,7 @@
         }
       }
 
-      #offsetControl {
+      #positionControl {
         position: absolute;
         bottom: 20px;
         left: 50%;
@@ -97,12 +97,12 @@
         z-index: 10;
       }
       
-      #offsetSlider {
+      #positionSlider {
         width: 200px;
         margin-right: 10px;
       }
       
-      #offsetValue {
+      #positionSliderValue {
         font-family: monospace;
         min-width: 45px;
         text-align: right;
@@ -116,11 +116,11 @@
           left: 15px;
         }
         
-        #offsetControl {
+        #positionControl {
           padding: 6px 10px;
         }
         
-        #offsetSlider {
+        #positionSlider {
           width: 150px;
         }
       }
@@ -131,9 +131,9 @@
       <canvas id="waveformCanvas"></canvas>
       <div id="playhead"></div>
       <button id="recordButton" title="Record Audio"></button>
-      <div id="offsetControl">
-        <input type="range" id="offsetSlider" min="0" max="1" step="0.01" value="0" autocomplete="off">
-        <span id="offsetValue">0</span>
+      <div id="positionControl">
+        <input type="range" id="positionSlider" min="0" max="1" step="0.01" value="0" autocomplete="off">
+        <span id="positionSliderValue">0</span>
       </div>
     </div>
     <script type="module" src="./src/main.js"></script>

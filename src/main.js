@@ -22,9 +22,9 @@ const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 
-const offsetSlider = document.getElementById('offsetSlider');
-const offsetValue = document.getElementById('offsetValue');
-offsetSlider.addEventListener('input', handleOffsetChange);
+const positionSlider = document.getElementById('positionSlider');
+const positionSliderValue = document.getElementById('positionSliderValue');
+positionSlider.addEventListener('input', handlePositionSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
@@ -164,6 +164,25 @@ function handleRecordButtonTouch(event) {
     toggleRecording();
 }
 
+
+function handlePositionSliderChange(event) {
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    const currentPosition = parseFloat(event.target.value);
+    positionSliderValue.textContent = currentPosition.toFixed(2);
+
+    samplerNode.port.postMessage({
+        action: 'updatePosition',
+        position: currentPosition
+    });
+
+    if (audioBuffer) {
+        waveform.plot(audioBuffer, currentPosition);
+    }
+}
+
 function beginInteraction(x) {
     isInteracting = true;
     lastX = x;
@@ -183,7 +202,7 @@ function handleInteraction(x, width) {
         position: currentPosition
     });
 
-    offsetValue.textContent = currentPosition.toFixed(2);
+    positionSliderValue.textContent = currentPosition.toFixed(2);
     waveform.plot(audioBuffer, currentPosition);
     lastX = x;
 }
@@ -231,15 +250,6 @@ function handleTouchMove(event) {
     const x = touch.clientX - rect.left;
 
     handleInteraction(x, rect.width);
-}
-
-function handleOffsetChange(event) {
-    const offset = parseFloat(event.target.value);
-    offsetValue.textContent = offset.toFixed(2);
-    
-    if (audioBuffer) {
-        waveform.plot(audioBuffer, offset);
-    }
 }
 
 async function init() {
