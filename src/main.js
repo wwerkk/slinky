@@ -178,7 +178,7 @@ function handleInteraction(x, width) {
     //     position: position
     // });
 
-    const offset = position; // Center the waveform around the interaction point
+    const offset = position;
     offsetValue.textContent = offset.toFixed(2);
     waveform.plot(audioBuffer, offset);
 }
