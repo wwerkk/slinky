@@ -64,6 +64,9 @@ async function handleDrop(event) {
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
         }
+        currentPosition = 0;
+        positionSlider.value = currentPosition;
+        positionSliderValue.textContent = currentPosition.toFixed(2);
         waveform.plot(audioBuffer);
     };
 
