@@ -12,8 +12,9 @@ let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
 
+let currentPosition = 0;
 let isInteracting = false;
-let dragStartX = null;
+let lastX = null;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -165,24 +166,26 @@ function handleRecordButtonTouch(event) {
 
 function beginInteraction(x) {
     isInteracting = true;
-    dragStartX = x;
+    lastX = x;
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
 }
 
 function handleInteraction(x, width) {
-    const startPosition = dragStartX / width;
+    const lastPosition = Math.max(0, Math.min(1, lastX / width));
     const position = Math.max(0, Math.min(1, x / width));
+    const offset = lastPosition - position;
+    currentPosition += offset;
 
-    // samplerNode.port.postMessage({
-    //     action: 'updatePosition',
-    //     position: position
-    // });
+    samplerNode.port.postMessage({
+        action: 'updatePosition',
+        position: currentPosition
+    });
 
-    const offset = startPosition - position;
-    offsetValue.textContent = offset.toFixed(2);
-    waveform.plot(audioBuffer, offset);
+    offsetValue.textContent = currentPosition.toFixed(2);
+    waveform.plot(audioBuffer, currentPosition);
+    lastX = x;
 }
 
 function handleMouseDown(event) {
