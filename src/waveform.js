@@ -30,7 +30,6 @@ export class Waveform {
         // * @param {number} offset (x axis)
         // relative to the center of the canvas and normalised to file length
         // 0 aligns the start, 1 aligns the end of the waveform 
-        console.log(offset);
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
         this.updateCanvasSize();
