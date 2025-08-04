@@ -35,12 +35,6 @@ export class Waveform {
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
 
-        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-
-        this.ctx.strokeStyle = 'black';
-        this.ctx.lineWidth = 1;
-        this.ctx.lineCap = 'round';
-
         const upscaledWidth = this.canvasWidth * this.upscaleFactor;
         
         const waveformPoints = [];
@@ -63,6 +57,12 @@ export class Waveform {
             
             waveformPoints.push(sample);
         }
+        
+
+        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.ctx.strokeStyle = 'black';
+        this.ctx.lineWidth = 1;
+        this.ctx.lineCap = 'round';
         
         this.ctx.beginPath();
         for (let i = 0; i < this.canvasWidth; i++) {
