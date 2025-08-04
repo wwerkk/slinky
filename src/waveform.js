@@ -41,11 +41,11 @@ export class Waveform {
         this.ctx.lineWidth = 1;
         this.ctx.lineCap = 'round';
 
-        const highResWidth = this.canvasWidth * this.upscaleFactor;
+        const upscaledWidth = this.canvasWidth * this.upscaleFactor;
         
         const waveformPoints = [];
-        for (let i = 0; i < highResWidth; i++) {
-            const samplePosition = (i * dataLength) / highResWidth;
+        for (let i = 0; i < upscaledWidth; i++) {
+            const samplePosition = (i * dataLength) / upscaledWidth;
             
             let sample;
             if (samplePosition >= dataLength - 1) {
@@ -66,8 +66,8 @@ export class Waveform {
         
         this.ctx.beginPath();
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor((i * highResWidth) / this.canvasWidth);
-            const endIdx = Math.floor(((i + 1) * highResWidth) / this.canvasWidth);
+            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth);
+            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth);
             
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
