@@ -20,7 +20,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
         if (action === 'updatePosition') {
             if (this.buffer) {
-                this.targetPosition += (position * (this.buffer.length - 1) - this.targetPosition) * 0.4;
+                this.targetPosition = position * (this.buffer.length - 1);
 
                 this.isPlaying = true;
             }
