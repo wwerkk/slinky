@@ -13,6 +13,7 @@ let recordedChunks = [];
 let isRecording = false;
 
 let isInteracting = false;
+let dragStartX = null;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -172,10 +173,14 @@ function beginInteraction() {
 function handleInteraction(x, width) {
     const position = Math.max(0, Math.min(1, x / width));
 
-    samplerNode.port.postMessage({
-        action: 'updatePosition',
-        position: position
-    });
+    // samplerNode.port.postMessage({
+    //     action: 'updatePosition',
+    //     position: position
+    // });
+    
+    const offset = position - 0.5; // Center the waveform around the interaction point
+    offsetValue.textContent = offset.toFixed(2);
+    waveform.plot(audioBuffer, offset);
 }
 
 function handleMouseDown(event) {
