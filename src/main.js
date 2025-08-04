@@ -177,6 +177,15 @@ function handleMouseUp(event) {
     isInteracting = false;
 }
 
+function handleWaveformMouseMove(event) {
+    if (!audioBuffer || !isInteracting) return;
+
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+
+    handleInteraction(x, rect.width);
+}
+
 function handleTouchStart(event) {
     event.preventDefault();
     beginInteraction();
@@ -194,15 +203,6 @@ function handleTouchMove(event) {
     const touch = event.touches[0];
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
-
-    handleInteraction(x, rect.width);
-}
-
-function handleWaveformMouseMove(event) {
-    if (!audioBuffer || !isInteracting) return;
-
-    const rect = event.target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
 
     handleInteraction(x, rect.width);
 }
