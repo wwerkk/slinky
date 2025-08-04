@@ -27,6 +27,8 @@ export class Waveform {
     }
 
     plot(buffer, offset = 0) {
+        // * @param {number} offset (x axis), relative to the center of the canvas
+        // 0 aligns the start, 1 aligns the end of the waveform 
         console.log(offset);
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
