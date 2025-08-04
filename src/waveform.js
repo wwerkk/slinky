@@ -35,11 +35,11 @@ export class Waveform {
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
         const upscaledWidth = this.canvasWidth * this.upscaleFactor;
-        
+
         const waveformPoints = [];
         for (let i = 0; i < upscaledWidth; i++) {
             const samplePosition = (i * dataLength) / upscaledWidth;
-            
+
             let sample;
             if (samplePosition <= 0) {
                 sample = channelData[0] || 0;
@@ -53,10 +53,10 @@ export class Waveform {
                 const upperSample = channelData[upperIndex] || 0;
                 sample = lowerSample + (upperSample - lowerSample) * fraction;
             }
-            
+
             waveformPoints.push(sample);
         }
-        
+
 
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.strokeStyle = 'black';
@@ -67,24 +67,24 @@ export class Waveform {
         for (let i = 0; i < this.canvasWidth; i++) {
             const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth);
             const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth);
-            
+
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
                 const value = waveformPoints[j];
                 if (value < min) min = value;
                 if (value > max) max = value;
             }
-            
+
             const x = i;
             const yMin = amp + (min * amp);
             const yMax = amp + (max * amp);
-            
+
             if (i === 0) {
                 this.ctx.moveTo(x, yMax);
             } else {
                 this.ctx.lineTo(x, yMax);
             }
-            
+
             if (Math.abs(yMax - yMin) > 1) {
                 this.ctx.lineTo(x, yMin);
                 this.ctx.lineTo(x, yMax);
