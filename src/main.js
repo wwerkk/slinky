@@ -195,7 +195,7 @@ function handleTouchMove(event) {
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
 
-    updateWaveformPosition(x, rect.width);
+    handleInteraction(x, rect.width);
 }
 
 function handleWaveformMouseMove(event) {
@@ -204,10 +204,10 @@ function handleWaveformMouseMove(event) {
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
 
-    updateWaveformPosition(x, rect.width);
+    handleInteraction(x, rect.width);
 }
 
-function updateWaveformPosition(x, width) {
+function handleInteraction(x, width) {
     const position = Math.max(0, Math.min(1, x / width));
 
     samplerNode.port.postMessage({
