@@ -67,6 +67,8 @@ export class Waveform {
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
 
+        offset -= 0.5;
+
         for (let i = 0; i < this.canvasWidth; i++) {
             const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + Math.floor(offset * upscaledWidth));
             const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + Math.floor(offset * upscaledWidth));
