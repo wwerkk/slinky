@@ -169,6 +169,15 @@ function beginInteraction() {
     }
 }
 
+function handleInteraction(x, width) {
+    const position = Math.max(0, Math.min(1, x / width));
+
+    samplerNode.port.postMessage({
+        action: 'updatePosition',
+        position: position
+    });
+}
+
 function handleMouseDown(event) {
     beginInteraction();
 }
@@ -205,15 +214,6 @@ function handleTouchMove(event) {
     const x = touch.clientX - rect.left;
 
     handleInteraction(x, rect.width);
-}
-
-function handleInteraction(x, width) {
-    const position = Math.max(0, Math.min(1, x / width));
-
-    samplerNode.port.postMessage({
-        action: 'updatePosition',
-        position: position
-    });
 }
 
 function handleOffsetChange(event) {
