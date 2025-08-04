@@ -214,8 +214,6 @@ function updateWaveformPosition(x, width) {
         action: 'updatePosition',
         position: position
     });
-
-    waveform.updatePlayhead(position);
 }
 
 function handleOffsetChange(event) {

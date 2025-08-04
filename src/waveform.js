@@ -101,9 +101,4 @@ export class Waveform {
 
         this.ctx.stroke();
     }
-
-    updatePlayhead(progress) {
-        const playheadX = Math.max(0, Math.min(1, progress)) * this.canvasWidth;
-        if (this.playhead) this.playhead.style.transform = `translateX(${playheadX}px)`;
-    }
 }
