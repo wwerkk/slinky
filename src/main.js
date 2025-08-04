@@ -170,7 +170,7 @@ function handlePositionSliderChange(event) {
         audioContext.resume();
     }
 
-    const currentPosition = parseFloat(event.target.value);
+    currentPosition = parseFloat(event.target.value);
     positionSliderValue.textContent = currentPosition.toFixed(2);
 
     samplerNode.port.postMessage({
