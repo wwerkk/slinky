@@ -163,14 +163,16 @@ function handleRecordButtonTouch(event) {
     toggleRecording();
 }
 
-function beginInteraction() {
+function beginInteraction(x) {
     isInteracting = true;
+    dragStartX = x;
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
 }
 
 function handleInteraction(x, width) {
+    const startPosition = dragStartX / width;
     const position = Math.max(0, Math.min(1, x / width));
 
     // samplerNode.port.postMessage({
@@ -178,13 +180,15 @@ function handleInteraction(x, width) {
     //     position: position
     // });
 
-    const offset = position;
+    const offset = startPosition - position;
     offsetValue.textContent = offset.toFixed(2);
     waveform.plot(audioBuffer, offset);
 }
 
 function handleMouseDown(event) {
-    beginInteraction();
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    beginInteraction(x);
 }
 
 function handleMouseUp(event) {
@@ -202,7 +206,12 @@ function handleWaveformMouseMove(event) {
 
 function handleTouchStart(event) {
     event.preventDefault();
-    beginInteraction();
+
+    const touch = event.touches[0];
+    const rect = event.target.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+
+    beginInteraction(x);
 }
 
 function handleTouchEnd(event) {
