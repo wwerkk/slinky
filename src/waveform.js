@@ -26,7 +26,7 @@ export class Waveform {
         }
     }
 
-    plot(buffer, offset = 0.5) {
+    plot(buffer, offset = 0) {
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
         this.updateCanvasSize();
@@ -62,13 +62,13 @@ export class Waveform {
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 1;
         this.ctx.lineCap = 'round';
-        
+
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
 
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth);
-            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth);
+            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + Math.floor(offset * upscaledWidth));
+            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + Math.floor(offset * upscaledWidth));
 
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
