@@ -26,7 +26,7 @@ export class Waveform {
         }
     }
 
-    plot(buffer) {
+    plot(buffer, offset = 0.5) {
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
         this.updateCanvasSize();
@@ -59,11 +59,11 @@ export class Waveform {
             waveformPoints.push(sample);
         }
 
-        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 1;
         this.ctx.lineCap = 'round';
-
+        
+        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
 
         for (let i = 0; i < this.canvasWidth; i++) {
