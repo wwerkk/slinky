@@ -253,7 +253,7 @@ function handleTouchMove(event) {
 }
 
 async function init() {
-    
+
     function generateSine(sampleRate = 44100) {
         const duration = 5; // seconds
         const frequency = 440; // Hz
