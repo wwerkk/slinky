@@ -27,6 +27,7 @@ export class Waveform {
     }
 
     plot(buffer, offset = 0) {
+        console.log(offset);
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
         this.updateCanvasSize();

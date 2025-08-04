@@ -20,6 +20,10 @@ const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 
+const offsetSlider = document.getElementById('offsetSlider');
+const offsetValue = document.getElementById('offsetValue');
+offsetSlider.addEventListener('input', handleOffsetChange);
+
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
@@ -214,7 +218,17 @@ function updateWaveformPosition(x, width) {
     waveform.updatePlayhead(position);
 }
 
+function handleOffsetChange(event) {
+    const offset = parseFloat(event.target.value);
+    offsetValue.textContent = offset.toFixed(2);
+    
+    if (audioBuffer) {
+        waveform.plot(audioBuffer, offset);
+    }
+}
+
 async function init() {
+    
     function generateSine(sampleRate = 44100) {
         const duration = 5; // seconds
         const frequency = 440; // Hz
