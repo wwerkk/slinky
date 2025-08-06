@@ -4,6 +4,7 @@ export class Waveform {
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
         this.currentBuffer = null;
+        this.position = 0;
         this.upscaleFactor = 4;
         this.updateCanvasSize();
 
@@ -20,7 +21,7 @@ export class Waveform {
 
     handleResize() {
         if (this.currentBuffer) {
-            this.plot(this.currentBuffer);
+            this.plot(this.currentBuffer, this.position);
         } else {
             this.updateCanvasSize();
         }
@@ -29,6 +30,7 @@ export class Waveform {
     plot(buffer, position = 0) {
         if (!buffer || buffer.numberOfChannels < 1) return;
         this.currentBuffer = buffer;
+        this.position = position;
         this.updateCanvasSize();
 
         const channelData = buffer.getChannelData(0); // Use the first channel
