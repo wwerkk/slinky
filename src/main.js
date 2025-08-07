@@ -185,7 +185,7 @@ function handlePositionSliderChange(event) {
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: playheadPosition
+        position: playheadPosition / zoomFactor
     });
 
     if (audioBuffer) {
@@ -217,7 +217,7 @@ function handleInteraction(x, width) {
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: playheadPosition
+        position: playheadPosition / zoomFactor
     });
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
