@@ -3,8 +3,8 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
-const MIN_ZOOM = 0.25;
-const MAX_ZOOM = 4;
+const MIN_ZOOM = 0.125;
+const MAX_ZOOM = 8;
 
 let audioContext;
 let audioBuffer;
