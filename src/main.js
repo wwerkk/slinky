@@ -7,17 +7,19 @@ let audioContext;
 let audioBuffer;
 let channelData;
 let samplerNode;
-let waveform;
+
 let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
 
+let waveform;
 let isInteracting = false;
 let lastMouseX = null;
 let playheadPosition = 0;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
+
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 recordButton.addEventListener('touchstart', handleRecordButtonTouch);
@@ -33,7 +35,6 @@ document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchmove', handleTouchMove);
 document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
-
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('dragstart', (event) => {
     event.preventDefault();
 });
@@ -58,12 +59,14 @@ async function handleDrop(event) {
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
+
         if (samplerNode) {
             samplerNode.port.postMessage({
                 action: 'setBuffer',
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
         }
+
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
         positionSliderValue.textContent = playheadPosition.toFixed(2);
@@ -112,29 +115,27 @@ async function toggleRecording() {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
                     audioBuffer = recordedBuffer;
                     channelData = audioBuffer.getChannelData(0);
+
                     if (samplerNode) {
                         samplerNode.port.postMessage({
                             action: 'setBuffer',
                             buffer: channelData.buffer
                         }, [channelData.buffer.slice()]);
                     }
+
                     waveform.plot(audioBuffer);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
 
-                // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());
             };
 
             mediaRecorder.start();
-
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            // Remove waiting state if microphone access fails
             recordButton.classList.remove('waiting');
 
-            // Show error messages for debugging
             if (error.name === 'NotAllowedError') {
                 alert('Microphone access denied. Please allow microphone access and try again.');
             } else if (error.name === 'NotFoundError') {
@@ -144,6 +145,7 @@ async function toggleRecording() {
             }
         }
     }
+
     function stopRecording() {
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
@@ -162,11 +164,10 @@ async function toggleRecording() {
 }
 
 function handleRecordButtonTouch(event) {
-    event.preventDefault(); // Prevent default touch behavior
-    event.stopPropagation(); // Stop event bubbling
+    event.preventDefault();
+    event.stopPropagation();
     toggleRecording();
 }
-
 
 function handlePositionSliderChange(event) {
     if (audioContext && audioContext.state === 'suspended') {
@@ -187,18 +188,18 @@ function handlePositionSliderChange(event) {
 }
 
 function beginInteraction(x) {
-    isInteracting = true;
-    lastMouseX = x;
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
+
+    isInteracting = true;
+    lastMouseX = x;
 }
 
 function handleInteraction(x, width) {
     const last = Math.max(0, Math.min(1, lastMouseX / width));
     const current = Math.max(0, Math.min(1, x / width));
     const delta = last - current;
-
     playheadPosition += delta;
 
     samplerNode.port.postMessage({
@@ -232,7 +233,6 @@ function handleMouseMove(event) {
 
 function handleTouchStart(event) {
     event.preventDefault();
-
     const touch = event.touches[0];
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
@@ -245,23 +245,20 @@ function handleTouchEnd(event) {
 }
 
 function handleTouchMove(event) {
-    event.preventDefault(); // Prevent default touch behavior like scrolling
+    event.preventDefault();
     if (!audioBuffer || !isInteracting) return;
 
     const touch = event.touches[0];
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
-
     handleInteraction(x, rect.width);
 }
 
 async function init() {
-
     function generateSine(sampleRate = 44100) {
         const duration = 5; // seconds
         const frequency = 440; // Hz
         const amplitude = 0.5;
-
         const length = sampleRate * duration;
 
         audioBuffer = audioContext.createBuffer(1, length, sampleRate);
@@ -287,6 +284,7 @@ async function init() {
         samplerNode = new AudioWorkletNode(audioContext, 'sampler-processor');
         samplerNode.connect(audioContext.destination);
     }
+
     samplerNode.port.postMessage({
         action: 'setBuffer',
         buffer: channelData.buffer
