@@ -7,11 +7,11 @@ export class Waveform {
         this.playheadPosition = 0;
         this.zoomFactor = 1;
         this.upscaleFactor = 4;
-        this.updateCanvasSize();
-        window.addEventListener('resize', () => this.handleResize());
+        this.#updateCanvasSize();
+        window.addEventListener('resize', () => this.#handleResize());
     }
 
-    updateCanvasSize() {
+    #updateCanvasSize() {
         const container = this.canvas.parentElement;
         this.canvasWidth = container.clientWidth;
         this.canvasHeight = container.clientHeight;
@@ -19,11 +19,11 @@ export class Waveform {
         this.canvas.height = this.canvasHeight;
     }
 
-    handleResize() {
+    #handleResize() {
         if (this.currentBuffer) {
             this.plot(this.currentBuffer, this.playheadPosition, this.zoomFactor);
         } else {
-            this.updateCanvasSize();
+            this.#updateCanvasSize();
         }
     }
 
@@ -33,7 +33,7 @@ export class Waveform {
         this.currentBuffer = buffer;
         this.playheadPosition = position;
         this.zoomFactor = zoom;
-        this.updateCanvasSize();
+        this.#updateCanvasSize();
 
         const channelData = buffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
