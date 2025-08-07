@@ -3,6 +3,9 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 4;
+
 let audioContext;
 let audioBuffer;
 let channelData;
@@ -194,8 +197,20 @@ function handlePositionSliderChange(event) {
 }
 
 function handleZoomSliderChange(event) {
-    zoomFactor = parseFloat(event.target.value);
-    zoomSliderValue.textContent = zoomFactor.toFixed(2);
+    let v = parseFloat(event.target.value);
+    let k = 2;
+    if (Math.abs(v) < 0.05) {
+        v = 0; // snap to 0
+        zoomSlider.value = v.toFixed(2);
+    }
+    if (v < 0) {
+        v = 1 + (MIN_ZOOM - 1) * Math.pow(-v, k);
+    } else if (v > 0) {
+        v = 1 + (MAX_ZOOM - 1) * Math.pow(v, k);
+    } else {
+        v = 1;
+    }
+    zoomFactor = v;
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
