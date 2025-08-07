@@ -68,14 +68,17 @@ export class Waveform {
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
 
-        position -= 0.5; // waveform is normally centered in the middle so we need to "rewind" a half of it
-
+        const visibleRange = 1.0 / this.zoomFactor;
+        const viewOffset = position - visibleRange / 2;
+        
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor(((i * upscaledWidth) / this.canvasWidth + position * upscaledWidth) / this.zoomFactor);
-            const endIdx = Math.floor((((i + 1) * upscaledWidth) / this.canvasWidth + position * upscaledWidth) / this.zoomFactor);
+            const viewIdx = viewOffset + (i / this.canvasWidth) * visibleRange;
+
+            const startIdx = Math.floor(viewIdx * upscaledWidth);
+            const endIdx = Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth);
 
             let min = 0, max = 0;
-            for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
+            for (let j = Math.max(0, startIdx); j < Math.min(endIdx, waveformPoints.length); j++) {
                 const value = waveformPoints[j];
                 if (value < min) min = value;
                 if (value > max) max = value;
