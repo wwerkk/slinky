@@ -4,9 +4,9 @@ export class Waveform {
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
         this.currentBuffer = null;
+        this.playheadPosition = 0;
         this.upscaleFactor = 4;
         this.updateCanvasSize();
-
         window.addEventListener('resize', () => this.handleResize());
     }
 
@@ -20,25 +20,28 @@ export class Waveform {
 
     handleResize() {
         if (this.currentBuffer) {
-            this.plot(this.currentBuffer);
+            this.plot(this.currentBuffer, this.playheadPosition);
         } else {
             this.updateCanvasSize();
         }
     }
 
-    plot(buffer) {
+    plot(buffer, position = 0) {
         if (!buffer || buffer.numberOfChannels < 1) return;
+
         this.currentBuffer = buffer;
+        this.playheadPosition = position;
         this.updateCanvasSize();
 
         const channelData = buffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
         const upscaledWidth = this.canvasWidth * this.upscaleFactor;
+        const samplesPerPixel = dataLength / upscaledWidth;
 
         const waveformPoints = [];
         for (let i = 0; i < upscaledWidth; i++) {
-            const samplePosition = (i * dataLength) / upscaledWidth;
+            const samplePosition = i * samplesPerPixel;
 
             let sample;
             if (samplePosition <= 0) {
@@ -57,16 +60,17 @@ export class Waveform {
             waveformPoints.push(sample);
         }
 
-
-        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 1;
         this.ctx.lineCap = 'round';
-
+        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
+
+        position -= 0.5; // waveform is normally centered in the middle so we need to "rewind" a half of it
+
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth);
-            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth);
+            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
+            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
 
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
@@ -92,10 +96,5 @@ export class Waveform {
         }
 
         this.ctx.stroke();
-    }
-
-    updatePlayhead(progress) {
-        const playheadX = Math.max(0, Math.min(1, progress)) * this.canvasWidth;
-        if (this.playhead) this.playhead.style.transform = `translateX(${playheadX}px)`;
     }
 }

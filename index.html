@@ -24,7 +24,7 @@
         touch-action: none;
         user-select: none;
         -webkit-user-drag: none;
-        -webkit-user-select: none; 
+        -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
         pointer-events: auto;
@@ -32,11 +32,12 @@
       #playhead {
         position: absolute;
         top: 0;
-        left: 0;
+        left: 50%;
         width: 2px;
         height: 100%;
         background-color: red;
-        transform: translateX(0);
+        z-index: 10;
+        pointer-events: none;
       }
       #recordButton {
         position: absolute;
@@ -83,12 +84,44 @@
         }
       }
 
+      #positionControl {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 8px 15px;
+        border-radius: 20px;
+        z-index: 10;
+      }
+
+      #positionSlider {
+        width: 200px;
+        margin-right: 10px;
+      }
+
+      #positionSliderValue {
+        font-family: monospace;
+        min-width: 45px;
+        text-align: right;
+      }
+
       @media (max-width: 768px) {
         #recordButton {
           width: 50px;
           height: 50px;
           top: 15px;
           left: 15px;
+        }
+
+        #positionControl {
+          padding: 6px 10px;
+        }
+
+        #positionSlider {
+          width: 150px;
         }
       }
     </style>
@@ -98,6 +131,18 @@
       <canvas id="waveformCanvas"></canvas>
       <div id="playhead"></div>
       <button id="recordButton" title="Record Audio"></button>
+      <div id="positionControl">
+        <input
+          type="range"
+          id="positionSlider"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0"
+          autocomplete="off"
+        />
+        <span id="positionSliderValue">0</span>
+      </div>
     </div>
     <script type="module" src="./src/main.js"></script>
   </body>
