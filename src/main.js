@@ -36,13 +36,30 @@ const zoomSlider = document.getElementById('zoomSlider');
 const zoomSliderValue = document.getElementById('zoomSliderValue');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
 
-document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
-document.addEventListener('mousemove', handleMouseMove);
-document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
+    beginInteraction(event.clientX);
+});
+document.addEventListener('mousemove', (event) => {
+    if (!audioBuffer || !isInteracting) return;
+    handleInteraction(event.clientX);
+});
+document.addEventListener('mouseup', (event) => {
+    isInteracting = false;
+}); // pick up mouseUp anywhere
 
-document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
-document.addEventListener('touchmove', handleTouchMove);
-document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    beginInteraction(event.touches[0].clientX);
+});
+document.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    if (!audioBuffer || !isInteracting) return;
+    handleInteraction(event.touches[0].clientX);
+});
+document.addEventListener('touchend', (event) => {
+    event.preventDefault();
+    isInteracting = false;
+}); // pick up touchEnd anywhere
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('dragstart', (event) => {
     event.preventDefault();
 });
@@ -239,37 +256,6 @@ function handleInteraction(x) {
     positionSliderValue.textContent = playheadPosition.toFixed(2);
     positionSlider.value = playheadPosition.toFixed(2);
     lastMouseX = x;
-}
-
-function handleMouseDown(event) {
-    beginInteraction(event.clientX);
-}
-
-function handleMouseUp(event) {
-    isInteracting = false;
-}
-
-function handleMouseMove(event) {
-    if (!audioBuffer || !isInteracting) return;
-
-    handleInteraction(event.clientX);
-}
-
-function handleTouchStart(event) {
-    event.preventDefault();
-    beginInteraction(event.touches[0].clientX);
-}
-
-function handleTouchEnd(event) {
-    event.preventDefault();
-    isInteracting = false;
-}
-
-function handleTouchMove(event) {
-    event.preventDefault();
-    if (!audioBuffer || !isInteracting) return;
-
-    handleInteraction(event.touches[0].clientX);
 }
 
 async function init() {
