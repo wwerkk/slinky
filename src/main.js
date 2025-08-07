@@ -188,7 +188,7 @@ function handlePositionSliderChange(event) {
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: playheadPosition / zoomFactor
+        position: playheadPosition
     });
 
     if (audioBuffer) {
