@@ -213,11 +213,11 @@ function handleInteraction(x, width) {
     const last = Math.max(0, Math.min(1, lastMouseX / width));
     const current = Math.max(0, Math.min(1, x / width));
     const delta = last - current;
-    playheadPosition += delta;
+    playheadPosition += delta / zoomFactor;
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: playheadPosition / zoomFactor
+        position: playheadPosition
     });
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
