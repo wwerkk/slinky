@@ -75,7 +75,7 @@ async function handleDrop(event) {
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
         positionSliderValue.textContent = playheadPosition.toFixed(2);
-        waveform.plot(audioBuffer);
+        waveform.plot(audioBuffer, playheadPosition);
     };
 
     event.preventDefault();
@@ -126,7 +126,10 @@ async function toggleRecording() {
                         }, [channelData.buffer.slice()]);
                     }
 
-                    waveform.plot(audioBuffer);
+                    playheadPosition = 0;
+                    positionSlider.value = playheadPosition;
+                    positionSliderValue.textContent = playheadPosition.toFixed(2);
+                    waveform.plot(audioBuffer, playheadPosition);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
