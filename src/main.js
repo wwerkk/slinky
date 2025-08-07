@@ -75,7 +75,7 @@ async function handleDrop(event) {
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
         positionSliderValue.textContent = playheadPosition.toFixed(2);
-        waveform.plot(audioBuffer, playheadPosition);
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     };
 
     event.preventDefault();
@@ -129,7 +129,7 @@ async function toggleRecording() {
                     playheadPosition = 0;
                     positionSlider.value = playheadPosition;
                     positionSliderValue.textContent = playheadPosition.toFixed(2);
-                    waveform.plot(audioBuffer, playheadPosition);
+                    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -189,7 +189,7 @@ function handlePositionSliderChange(event) {
     });
 
     if (audioBuffer) {
-        waveform.plot(audioBuffer, playheadPosition);
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     }
 }
 
@@ -220,7 +220,7 @@ function handleInteraction(x, width) {
         position: playheadPosition
     });
 
-    waveform.plot(audioBuffer, playheadPosition);
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     positionSliderValue.textContent = playheadPosition.toFixed(2);
     positionSlider.value = playheadPosition.toFixed(2);
     lastMouseX = x;
