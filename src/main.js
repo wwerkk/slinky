@@ -37,11 +37,11 @@ const zoomSliderValue = document.getElementById('zoomSliderValue');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
-document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleMouseMove);
+document.addEventListener('mousemove', handleMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
-document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchmove', handleTouchMove);
+document.addEventListener('touchmove', handleTouchMove);
 document.addEventListener('touchend', handleTouchEnd); // pick up touchEnd anywhere
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('dragstart', (event) => {
     event.preventDefault();
@@ -224,9 +224,9 @@ function beginInteraction(x) {
     lastMouseX = x;
 }
 
-function handleInteraction(x, width) {
-    const last = Math.max(0, Math.min(1, lastMouseX / width));
-    const current = Math.max(0, Math.min(1, x / width));
+function handleInteraction(x) {
+    const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
+    const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
     const delta = last - current;
     playheadPosition += delta / zoomFactor;
 
@@ -242,9 +242,7 @@ function handleInteraction(x, width) {
 }
 
 function handleMouseDown(event) {
-    const rect = event.target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    beginInteraction(x);
+    beginInteraction(event.clientX);
 }
 
 function handleMouseUp(event) {
@@ -254,17 +252,12 @@ function handleMouseUp(event) {
 function handleMouseMove(event) {
     if (!audioBuffer || !isInteracting) return;
 
-    const rect = event.target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    handleInteraction(x, rect.width);
+    handleInteraction(event.clientX);
 }
 
 function handleTouchStart(event) {
     event.preventDefault();
-    const touch = event.touches[0];
-    const rect = event.target.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    beginInteraction(x);
+    beginInteraction(event.touches[0].clientX);
 }
 
 function handleTouchEnd(event) {
@@ -276,10 +269,7 @@ function handleTouchMove(event) {
     event.preventDefault();
     if (!audioBuffer || !isInteracting) return;
 
-    const touch = event.touches[0];
-    const rect = event.target.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    handleInteraction(x, rect.width);
+    handleInteraction(event.touches[0].clientX);
 }
 
 async function init() {
