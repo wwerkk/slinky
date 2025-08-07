@@ -71,8 +71,8 @@ export class Waveform {
         position -= 0.5; // waveform is normally centered in the middle so we need to "rewind" a half of it
 
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
-            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
+            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + position * upscaledWidth);
+            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + position * upscaledWidth);
 
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
