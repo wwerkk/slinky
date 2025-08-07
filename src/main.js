@@ -16,6 +16,7 @@ let waveform;
 let isInteracting = false;
 let lastMouseX = null;
 let playheadPosition = 0;
+let zoomFactor = 1;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -27,6 +28,10 @@ recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
 positionSlider.addEventListener('input', handlePositionSliderChange);
+
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomSliderValue = document.getElementById('zoomSliderValue');
+zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleMouseMove);
@@ -183,6 +188,11 @@ function handlePositionSliderChange(event) {
     if (audioBuffer) {
         waveform.plot(audioBuffer, playheadPosition);
     }
+}
+
+function handleZoomSliderChange(event) {
+    zoomFactor = parseFloat(event.target.value);
+    zoomSliderValue.textContent = zoomFactor.toFixed(2);
 }
 
 function beginInteraction(x) {
