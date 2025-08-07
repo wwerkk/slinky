@@ -27,7 +27,7 @@ const positionSliderValue = document.getElementById('positionSliderValue');
 positionSlider.addEventListener('input', handlePositionSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
-document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleWaveformMouseMove);
+document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleMouseMove);
 document.addEventListener('mouseup', handleMouseUp); // pick up mouseUp anywhere
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', handleTouchStart);
@@ -222,7 +222,7 @@ function handleMouseUp(event) {
     isInteracting = false;
 }
 
-function handleWaveformMouseMove(event) {
+function handleMouseMove(event) {
     if (!audioBuffer || !isInteracting) return;
 
     const rect = event.target.getBoundingClientRect();
