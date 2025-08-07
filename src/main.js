@@ -12,9 +12,9 @@ let mediaRecorder;
 let recordedChunks = [];
 let isRecording = false;
 
-let currentPosition = 0;
 let isInteracting = false;
-let lastX = null;
+let lastMouseX = null;
+let playheadPosition = 0;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -64,9 +64,9 @@ async function handleDrop(event) {
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
         }
-        currentPosition = 0;
-        positionSlider.value = currentPosition;
-        positionSliderValue.textContent = currentPosition.toFixed(2);
+        playheadPosition = 0;
+        positionSlider.value = playheadPosition;
+        positionSliderValue.textContent = playheadPosition.toFixed(2);
         waveform.plot(audioBuffer);
     };
 
@@ -173,42 +173,43 @@ function handlePositionSliderChange(event) {
         audioContext.resume();
     }
 
-    currentPosition = parseFloat(event.target.value);
-    positionSliderValue.textContent = currentPosition.toFixed(2);
+    playheadPosition = parseFloat(event.target.value);
+    positionSliderValue.textContent = playheadPosition.toFixed(2);
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: currentPosition
+        position: playheadPosition
     });
 
     if (audioBuffer) {
-        waveform.plot(audioBuffer, currentPosition);
+        waveform.plot(audioBuffer, playheadPosition);
     }
 }
 
 function beginInteraction(x) {
     isInteracting = true;
-    lastX = x;
+    lastMouseX = x;
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
 }
 
 function handleInteraction(x, width) {
-    const lastPosition = Math.max(0, Math.min(1, lastX / width));
-    const position = Math.max(0, Math.min(1, x / width));
-    const offset = lastPosition - position;
-    currentPosition += offset;
+    const last = Math.max(0, Math.min(1, lastMouseX / width));
+    const current = Math.max(0, Math.min(1, x / width));
+    const delta = last - current;
+
+    playheadPosition += delta;
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
-        position: currentPosition
+        position: playheadPosition
     });
 
-    positionSliderValue.textContent = currentPosition.toFixed(2);
-    positionSlider.value = currentPosition.toFixed(2);
-    waveform.plot(audioBuffer, currentPosition);
-    lastX = x;
+    waveform.plot(audioBuffer, playheadPosition);
+    positionSliderValue.textContent = playheadPosition.toFixed(2);
+    positionSlider.value = playheadPosition.toFixed(2);
+    lastMouseX = x;
 }
 
 function handleMouseDown(event) {
@@ -226,7 +227,6 @@ function handleWaveformMouseMove(event) {
 
     const rect = event.target.getBoundingClientRect();
     const x = event.clientX - rect.left;
-
     handleInteraction(x, rect.width);
 }
 
@@ -236,7 +236,6 @@ function handleTouchStart(event) {
     const touch = event.touches[0];
     const rect = event.target.getBoundingClientRect();
     const x = touch.clientX - rect.left;
-
     beginInteraction(x);
 }
 
