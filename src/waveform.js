@@ -74,11 +74,11 @@ export class Waveform {
         for (let i = 0; i < this.canvasWidth; i++) {
             const viewIdx = viewOffset + (i / this.canvasWidth) * visibleRange;
 
-            const startIdx = Math.floor(viewIdx * upscaledWidth);
-            const endIdx = Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth);
+            const startIdx = Math.max(0, Math.floor(viewIdx * upscaledWidth));
+            const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), waveformPoints.length);
 
             let min = 0, max = 0;
-            for (let j = Math.max(0, startIdx); j < Math.min(endIdx, waveformPoints.length); j++) {
+            for (let j = startIdx; j < endIdx; j++) {
                 const value = waveformPoints[j];
                 if (value < min) min = value;
                 if (value > max) max = value;
