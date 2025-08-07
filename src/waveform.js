@@ -5,6 +5,7 @@ export class Waveform {
         this.playhead = document.getElementById(playheadId);
         this.currentBuffer = null;
         this.playheadPosition = 0;
+        this.zoomFactor = 1;
         this.upscaleFactor = 4;
         this.updateCanvasSize();
         window.addEventListener('resize', () => this.handleResize());
@@ -20,17 +21,18 @@ export class Waveform {
 
     handleResize() {
         if (this.currentBuffer) {
-            this.plot(this.currentBuffer, this.playheadPosition);
+            this.plot(this.currentBuffer, this.playheadPosition, this.zoomFactor);
         } else {
             this.updateCanvasSize();
         }
     }
 
-    plot(buffer, position = 0) {
+    plot(buffer, position = 0, zoom = 1) {
         if (!buffer || buffer.numberOfChannels < 1) return;
 
         this.currentBuffer = buffer;
         this.playheadPosition = position;
+        this.zoomFactor = zoom;
         this.updateCanvasSize();
 
         const channelData = buffer.getChannelData(0); // Use the first channel
@@ -66,14 +68,17 @@ export class Waveform {
         this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.ctx.beginPath();
 
-        position -= 0.5; // waveform is normally centered in the middle so we need to "rewind" a half of it
-
+        const visibleRange = 1.0 / this.zoomFactor;
+        const viewOffset = position - visibleRange / 2;
+        
         for (let i = 0; i < this.canvasWidth; i++) {
-            const startIdx = Math.floor((i * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
-            const endIdx = Math.floor(((i + 1) * upscaledWidth) / this.canvasWidth + Math.floor(position * upscaledWidth));
+            const viewIdx = viewOffset + (i / this.canvasWidth) * visibleRange;
+
+            const startIdx = Math.max(0, Math.floor(viewIdx * upscaledWidth));
+            const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), waveformPoints.length);
 
             let min = 0, max = 0;
-            for (let j = startIdx; j < endIdx && j < waveformPoints.length; j++) {
+            for (let j = startIdx; j < endIdx; j++) {
                 const value = waveformPoints[j];
                 if (value < min) min = value;
                 if (value > max) max = value;

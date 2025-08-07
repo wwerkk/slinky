@@ -3,6 +3,9 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
+const MIN_ZOOM = 0.125;
+const MAX_ZOOM = 8;
+
 let audioContext;
 let audioBuffer;
 let channelData;
@@ -16,6 +19,7 @@ let waveform;
 let isInteracting = false;
 let lastMouseX = null;
 let playheadPosition = 0;
+let zoomFactor = 1;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -27,6 +31,10 @@ recordButton.addEventListener('touchstart', handleRecordButtonTouch);
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
 positionSlider.addEventListener('input', handlePositionSliderChange);
+
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomSliderValue = document.getElementById('zoomSliderValue');
+zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', handleMouseDown);
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousemove', handleMouseMove);
@@ -70,7 +78,7 @@ async function handleDrop(event) {
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
         positionSliderValue.textContent = playheadPosition.toFixed(2);
-        waveform.plot(audioBuffer);
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     };
 
     event.preventDefault();
@@ -83,7 +91,6 @@ async function handleDrop(event) {
 async function toggleRecording() {
     async function startRecording() {
         try {
-            // Show waiting state immediately when clicked
             recordButton.classList.add('waiting');
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -97,7 +104,6 @@ async function toggleRecording() {
             };
 
             mediaRecorder.onstart = () => {
-                // Remove waiting state and show recording state when recording actually starts
                 recordButton.classList.remove('waiting');
                 recordButton.classList.add('recording');
                 isRecording = true;
@@ -123,7 +129,10 @@ async function toggleRecording() {
                         }, [channelData.buffer.slice()]);
                     }
 
-                    waveform.plot(audioBuffer);
+                    playheadPosition = 0;
+                    positionSlider.value = playheadPosition;
+                    positionSliderValue.textContent = playheadPosition.toFixed(2);
+                    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -183,8 +192,27 @@ function handlePositionSliderChange(event) {
     });
 
     if (audioBuffer) {
-        waveform.plot(audioBuffer, playheadPosition);
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     }
+}
+
+function handleZoomSliderChange(event) {
+    let v = parseFloat(event.target.value);
+    let k = 2;
+    if (Math.abs(v) < 0.05) {
+        v = 0; // snap to 0
+        zoomSlider.value = v.toFixed(2);
+    }
+    if (v < 0) {
+        v = 1 + (MIN_ZOOM - 1) * Math.pow(-v, k);
+    } else if (v > 0) {
+        v = 1 + (MAX_ZOOM - 1) * Math.pow(v, k);
+    } else {
+        v = 1;
+    }
+    zoomFactor = v;
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
 function beginInteraction(x) {
@@ -200,14 +228,14 @@ function handleInteraction(x, width) {
     const last = Math.max(0, Math.min(1, lastMouseX / width));
     const current = Math.max(0, Math.min(1, x / width));
     const delta = last - current;
-    playheadPosition += delta;
+    playheadPosition += delta / zoomFactor;
 
     samplerNode.port.postMessage({
         action: 'updatePosition',
         position: playheadPosition
     });
 
-    waveform.plot(audioBuffer, playheadPosition);
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     positionSliderValue.textContent = playheadPosition.toFixed(2);
     positionSlider.value = playheadPosition.toFixed(2);
     lastMouseX = x;
