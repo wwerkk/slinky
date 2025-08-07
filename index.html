@@ -86,12 +86,12 @@
 
       #positionControl {
         position: absolute;
-        bottom: 20px;
+        bottom: 60px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
         align-items: center;
-        background-color: rgba(255, 255, 255, 0.8);
+        background-color: rgba(255, 255, 255, 0.3);
         padding: 8px 15px;
         border-radius: 20px;
         z-index: 10;
@@ -110,12 +110,12 @@
 
       #zoomControl {
         position: absolute;
-        bottom: 60px;
+        top: 20px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
         align-items: center;
-        background-color: rgba(255, 255, 255, 0.8);
+        background-color: rgba(255, 255, 255, 0.2);
         padding: 8px 15px;
         border-radius: 20px;
         z-index: 10;
@@ -123,13 +123,6 @@
 
       #zoomSlider {
         width: 200px;
-        margin-right: 10px;
-      }
-
-      #zoomSliderValue {
-        font-family: monospace;
-        min-width: 45px;
-        text-align: right;
       }
 
       @media (max-width: 768px) {
@@ -176,6 +169,7 @@
         <span id="positionSliderValue">0</span>
       </div>
       <div id="zoomControl">
+        <span class="slider-label">-</span>
         <input
           type="range"
           id="zoomSlider"
@@ -185,6 +179,7 @@
           value="0"
           autocomplete="off"
         />
+        <span class="slider-label">+</span>
       </div>
     </div>
     <script type="module" src="./src/main.js"></script>
