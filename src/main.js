@@ -83,7 +83,6 @@ async function handleDrop(event) {
 async function toggleRecording() {
     async function startRecording() {
         try {
-            // Show waiting state immediately when clicked
             recordButton.classList.add('waiting');
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -97,7 +96,6 @@ async function toggleRecording() {
             };
 
             mediaRecorder.onstart = () => {
-                // Remove waiting state and show recording state when recording actually starts
                 recordButton.classList.remove('waiting');
                 recordButton.classList.add('recording');
                 isRecording = true;
