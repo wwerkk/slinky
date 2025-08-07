@@ -193,6 +193,8 @@ function handlePositionSliderChange(event) {
 function handleZoomSliderChange(event) {
     zoomFactor = parseFloat(event.target.value);
     zoomSliderValue.textContent = zoomFactor.toFixed(2);
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
 function beginInteraction(x) {
