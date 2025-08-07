@@ -33,7 +33,6 @@ const positionSliderValue = document.getElementById('positionSliderValue');
 positionSlider.addEventListener('input', handlePositionSliderChange);
 
 const zoomSlider = document.getElementById('zoomSlider');
-const zoomSliderValue = document.getElementById('zoomSliderValue');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
