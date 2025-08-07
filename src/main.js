@@ -38,19 +38,19 @@ zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
     beginInteraction(event.clientX);
-});
+}); // begin interaction on click inside canvas
 document.addEventListener('mousemove', (event) => {
     if (!audioBuffer || !isInteracting) return;
     handleInteraction(event.clientX);
 });
 document.addEventListener('mouseup', (event) => {
     isInteracting = false;
-}); // pick up mouseUp anywhere
+});
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', (event) => {
     event.preventDefault();
     beginInteraction(event.touches[0].clientX);
-});
+}); // begin interaction on touch inside canvas
 document.addEventListener('touchmove', (event) => {
     event.preventDefault();
     if (!audioBuffer || !isInteracting) return;
@@ -59,7 +59,8 @@ document.addEventListener('touchmove', (event) => {
 document.addEventListener('touchend', (event) => {
     event.preventDefault();
     isInteracting = false;
-}); // pick up touchEnd anywhere
+});
+
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('dragstart', (event) => {
     event.preventDefault();
 });
