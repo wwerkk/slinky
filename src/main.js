@@ -20,6 +20,7 @@ let isInteracting = false;
 let lastMouseX = null;
 let playheadPosition = 0;
 let zoomFactor = 1;
+let drawMode = false;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -27,6 +28,10 @@ document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 recordButton.addEventListener('touchstart', handleRecordButtonTouch);
+
+const drawButton = document.getElementById('drawButton');
+drawButton.addEventListener('click', toggleDrawMode);
+drawButton.addEventListener('touchstart', handleDrawButtonTouch);
 
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
@@ -193,6 +198,23 @@ function handleRecordButtonTouch(event) {
     event.preventDefault();
     event.stopPropagation();
     toggleRecording();
+}
+
+function toggleDrawMode() {
+    drawMode = !drawMode;
+    const drawButton = document.getElementById('drawButton');
+    
+    if (drawMode) {
+        drawButton.classList.add('active');
+    } else {
+        drawButton.classList.remove('active');
+    }
+}
+
+function handleDrawButtonTouch(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleDrawMode();
 }
 
 function handlePositionSliderChange(event) {
