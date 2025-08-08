@@ -18,6 +18,7 @@ let isRecording = false;
 let waveform;
 let isInteracting = false;
 let lastMouseX = null;
+let lastMouseY = null;
 let playheadPosition = 0;
 let zoomFactor = 1;
 let drawMode = false;
@@ -262,9 +263,9 @@ function beginInteraction(x, y) {
 
     if (drawMode) {
         drawAtPosition(x, y);
-    } else {
-        lastMouseX = x;
     }
+    lastMouseX = x;
+    lastMouseY = y;
 }
 
 function handleInteraction(x, y) {
