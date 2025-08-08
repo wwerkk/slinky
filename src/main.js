@@ -333,14 +333,9 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = -mouseYtoAmp(mouseY);
-    const samplesPerPixel = audioBuffer.length / waveform.canvasWidth / zoomFactor;
-
+    
     const channel = audioBuffer.getChannelData(0);
-
-    for (let i = 0; i < samplesPerPixel; i++) {
-        let idx = sampleIdx + i;
-        if (channel[idx]) channel[idx] = amp;
-    }
+    if (channel[sampleIdx]) channel[sampleIdx] = amp;
 
     samplerNode.port.postMessage({
         action: 'setBuffer',
