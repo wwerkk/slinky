@@ -269,7 +269,12 @@ function beginInteraction(x, y) {
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        drawAtPosition(x, y);
+        if (lastMouseX !== null && lastMouseY !== null) {
+            drawLine(lastMouseX, lastMouseY, x, y);
+        }
+
+        lastMouseX = x;
+        lastMouseY = y;
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -342,6 +347,37 @@ function drawAtPosition(mouseX, mouseY) {
         buffer: channel.buffer
     }, [channel.buffer.slice()]);
 
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+}
+
+function drawLine(x1, y1, x2, y2) {
+    const startSample = mouseXtoSample(x1);
+    const endSample = mouseXtoSample(x2);
+    const startAmp = mouseYtoAmp(y1);
+    const endAmp = mouseYtoAmp(y2);
+    
+    const minSample = Math.min(startSample, endSample);
+    const maxSample = Math.max(startSample, endSample);
+    
+    if (maxSample - minSample <= 1) {
+        drawAtPosition(x2, y2);
+        return;
+    }
+    
+    for (let sampleIndex = minSample; sampleIndex <= maxSample; sampleIndex++) {
+        const t = (sampleIndex - startSample) / (endSample - startSample);
+        const amplitude = startAmp + t * (endAmp - startAmp);
+
+        if (sampleIndex >= 0 && sampleIndex < channelData.length) {
+            channelData[sampleIndex] = -amplitude
+        }
+    }
+    
+    samplerNode.port.postMessage({
+        action: 'setBuffer',
+        buffer: channelData.buffer
+    });
+    
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
