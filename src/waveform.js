@@ -6,7 +6,7 @@ export class Waveform {
         this.currentBuffer = null;
         this.playheadPosition = 0;
         this.zoomFactor = 1;
-        this.upscaleFactor = 4;
+        this.upscaleFactor = 1;
         this.#updateCanvasSize();
         window.addEventListener('resize', () => this.#handleResize());
     }
@@ -38,7 +38,7 @@ export class Waveform {
         const channelData = buffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const amp = this.canvasHeight / 2;
-        const upscaledWidth = this.canvasWidth * this.upscaleFactor;
+        const upscaledWidth = dataLength * this.upscaleFactor;
         const samplesPerPixel = dataLength / upscaledWidth;
 
         const waveformPoints = [];
