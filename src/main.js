@@ -3,7 +3,7 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
-const MIN_ZOOM = 1/32;
+const MIN_ZOOM = 1 / 32;
 const MAX_ZOOM = 32;
 
 let audioContext;
@@ -41,11 +41,11 @@ const zoomSlider = document.getElementById('zoomSlider');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
-    beginInteraction(event.clientX);
+    beginInteraction(event.clientX, event.clientY);
 }); // begin interaction on click inside canvas
 document.addEventListener('mousemove', (event) => {
     if (!audioBuffer || !isInteracting) return;
-    handleInteraction(event.clientX);
+    handleInteraction(event.clientX, event.clientY);
 });
 document.addEventListener('mouseup', (event) => {
     isInteracting = false;
@@ -203,7 +203,7 @@ function handleRecordButtonTouch(event) {
 function toggleDrawMode() {
     drawMode = !drawMode;
     const drawButton = document.getElementById('drawButton');
-    
+
     if (drawMode) {
         drawButton.classList.add('active');
     } else {
@@ -254,30 +254,38 @@ function handleZoomSliderChange(event) {
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
-function beginInteraction(x) {
+function beginInteraction(x, y) {
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
-
     isInteracting = true;
-    lastMouseX = x;
+
+    if (drawMode) {
+        // TODO
+    } else {
+        lastMouseX = x;
+    }
 }
 
-function handleInteraction(x) {
-    const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
-    const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
-    const delta = last - current;
-    playheadPosition += delta / zoomFactor;
+function handleInteraction(x, y) {
+    if (drawMode) {
+        // TODO
+    } else {
+        const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
+        const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
+        const delta = last - current;
+        playheadPosition += delta / zoomFactor;
 
-    samplerNode.port.postMessage({
-        action: 'updatePosition',
-        position: playheadPosition
-    });
+        samplerNode.port.postMessage({
+            action: 'updatePosition',
+            position: playheadPosition
+        });
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
-    positionSliderValue.textContent = playheadPosition.toFixed(2);
-    positionSlider.value = playheadPosition.toFixed(2);
-    lastMouseX = x;
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        positionSliderValue.textContent = playheadPosition.toFixed(2);
+        positionSlider.value = playheadPosition.toFixed(2);
+        lastMouseX = x;
+    }
 }
 
 async function init() {
