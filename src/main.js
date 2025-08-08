@@ -261,10 +261,6 @@ function beginInteraction(x, y) {
     isInteracting = true;
 
     if (drawMode) {
-        const sampleIdx = mouseXtoSample(x);
-        const amp = mouseYtoAmp(y);
-
-        console.log("mouseXtoSample:", x, "->", sampleIdx, "mouseYtoAmp:", y, "->", amp, "playheadPosition:", playheadPosition, "Buffer size:", audioBuffer.length);
     } else {
         lastMouseX = x;
     }
@@ -274,8 +270,7 @@ function handleInteraction(x, y) {
     if (drawMode) {
         const sampleIdx = mouseXtoSample(x);
         const amp = mouseYtoAmp(y);
-
-        console.log("mouseXtoSample:", x, "->", sampleIdx, "mouseYtoAmp:", y, "->", amp, "playheadPosition:", playheadPosition, "Buffer size:", audioBuffer.length);
+        const samplesPerPixel = audioBuffer.length / waveform.canvasWidth / zoomFactor;
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
