@@ -337,7 +337,7 @@ async function init() {
 
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
-    const amp = -mouseYtoAmp(mouseY);
+    const amp = mouseYtoAmp(mouseY);
 
     const channel = audioBuffer.getChannelData(0);
     if (channel[sampleIdx]) channel[sampleIdx] = amp;
@@ -369,7 +369,7 @@ function drawLine(x1, y1, x2, y2) {
         const amplitude = startAmp + t * (endAmp - startAmp);
 
         if (sampleIndex >= 0 && sampleIndex < channelData.length) {
-            channelData[sampleIndex] = -amplitude
+            channelData[sampleIndex] = amplitude
         }
     }
 
