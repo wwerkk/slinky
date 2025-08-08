@@ -261,7 +261,10 @@ function beginInteraction(x, y) {
     isInteracting = true;
 
     if (drawMode) {
-        // TODO
+        const sampleIdx = mouseXtoSample(x);
+        const amp = mouseYtoAmp(y);
+
+        console.log("mouseXtoSample:", x, "->", sampleIdx, "mouseYtoAmp:", y, "->", amp, "playheadPosition:", playheadPosition, "Buffer size:", audioBuffer.length);
     } else {
         lastMouseX = x;
     }
@@ -269,7 +272,10 @@ function beginInteraction(x, y) {
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        // TODO
+        const sampleIdx = mouseXtoSample(x);
+        const amp = mouseYtoAmp(y);
+
+        console.log("mouseXtoSample:", x, "->", sampleIdx, "mouseYtoAmp:", y, "->", amp, "playheadPosition:", playheadPosition, "Buffer size:", audioBuffer.length);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -328,4 +334,17 @@ async function init() {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
     }
     waveform.plot(audioBuffer);
+}
+
+function mouseXtoSample(mouseX) {
+    const canvasWidth = waveform.canvasWidth;
+    const x = audioBuffer.length * (-0.5 + playheadPosition + mouseX / canvasWidth);
+    return Math.floor(x)
+}
+
+function mouseYtoAmp(mouseY) {
+    const canvasHeight = waveform.canvasHeight;
+    const y = mouseY / canvasHeight;
+
+    return 1 - (2 * y)
 }
