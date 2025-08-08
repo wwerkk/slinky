@@ -332,7 +332,7 @@ async function init() {
 
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
-    const amp = mouseYtoAmp(mouseY);
+    const amp = -mouseYtoAmp(mouseY);
     const samplesPerPixel = audioBuffer.length / waveform.canvasWidth / zoomFactor;
 }
 
