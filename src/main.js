@@ -339,10 +339,9 @@ async function init() {
 function mouseXtoSample(mouseX) {
     const bufferLength = audioBuffer.length;
     const canvasWidth = waveform.canvasWidth;
-    const positionOffset = -0.5 + playheadPosition;
-    const position = mouseX / canvasWidth;
+    const position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
 
-    const idx = bufferLength * (position + positionOffset);
+    const idx =  (playheadPosition + position / zoomFactor) * bufferLength;
     return Math.floor(idx);
 }
 
