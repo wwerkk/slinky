@@ -337,9 +337,13 @@ async function init() {
 }
 
 function mouseXtoSample(mouseX) {
+    const bufferLength = audioBuffer.length;
     const canvasWidth = waveform.canvasWidth;
-    const x = audioBuffer.length * (-0.5 + playheadPosition + mouseX / canvasWidth);
-    return Math.floor(x)
+    const positionOffset = -0.5 + playheadPosition;
+    const position = mouseX / canvasWidth;
+
+    const idx = bufferLength * (position + positionOffset);
+    return Math.floor(idx);
 }
 
 function mouseYtoAmp(mouseY) {
