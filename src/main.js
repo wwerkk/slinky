@@ -341,7 +341,7 @@ function mouseXtoSample(mouseX) {
     const canvasWidth = waveform.canvasWidth;
     const position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
 
-    const idx =  (playheadPosition + position / zoomFactor) * bufferLength;
+    const idx = (playheadPosition + position / zoomFactor) * bufferLength;
     return Math.floor(idx);
 }
 
