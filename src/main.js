@@ -338,7 +338,7 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = -mouseYtoAmp(mouseY);
-    
+
     const channel = audioBuffer.getChannelData(0);
     if (channel[sampleIdx]) channel[sampleIdx] = amp;
 
@@ -355,15 +355,15 @@ function drawLine(x1, y1, x2, y2) {
     const endSample = mouseXtoSample(x2);
     const startAmp = mouseYtoAmp(y1);
     const endAmp = mouseYtoAmp(y2);
-    
+
     const minSample = Math.min(startSample, endSample);
     const maxSample = Math.max(startSample, endSample);
-    
+
     if (maxSample - minSample <= 1) {
         drawAtPosition(x2, y2);
         return;
     }
-    
+
     for (let sampleIndex = minSample; sampleIndex <= maxSample; sampleIndex++) {
         const t = (sampleIndex - startSample) / (endSample - startSample);
         const amplitude = startAmp + t * (endAmp - startAmp);
@@ -372,12 +372,12 @@ function drawLine(x1, y1, x2, y2) {
             channelData[sampleIndex] = -amplitude
         }
     }
-    
+
     samplerNode.port.postMessage({
         action: 'setBuffer',
         buffer: channelData.buffer
     });
-    
+
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
