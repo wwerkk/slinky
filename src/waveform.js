@@ -79,7 +79,7 @@ export class Waveform {
 
             let min = 0, max = 0;
             for (let j = startIdx; j < endIdx; j++) {
-                const value = waveformPoints[j];
+                const value = -waveformPoints[j];
                 if (value < min) min = value;
                 if (value > max) max = value;
             }
