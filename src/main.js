@@ -54,12 +54,12 @@ document.addEventListener('mouseup', (event) => {
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', (event) => {
     event.preventDefault();
-    beginInteraction(event.touches[0].clientX);
+    beginInteraction(event.touches[0].clientX, event.touches[0].clientY);
 }); // begin interaction on touch inside canvas
 document.addEventListener('touchmove', (event) => {
     event.preventDefault();
     if (!audioBuffer || !isInteracting) return;
-    handleInteraction(event.touches[0].clientX);
+    handleInteraction(event.touches[0].clientX, event.touches[0].clientY);
 });
 document.addEventListener('touchend', (event) => {
     event.preventDefault();
