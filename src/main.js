@@ -3,8 +3,8 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
-const MIN_ZOOM = 0.125;
-const MAX_ZOOM = 8;
+const MIN_ZOOM = 1/32;
+const MAX_ZOOM = 32;
 
 let audioContext;
 let audioBuffer;
@@ -261,7 +261,7 @@ function handleInteraction(x) {
 async function init() {
     function generateSine(sampleRate = 44100) {
         const duration = 1; // seconds
-        const frequency = 440; // Hz
+        const frequency = 441; // Hz
         const amplitude = 0.5;
         const length = sampleRate * duration;
 
