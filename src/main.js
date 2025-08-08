@@ -261,6 +261,7 @@ function beginInteraction(x, y) {
     isInteracting = true;
 
     if (drawMode) {
+        drawAtPosition(x, y);
     } else {
         lastMouseX = x;
     }
@@ -268,9 +269,7 @@ function beginInteraction(x, y) {
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        const sampleIdx = mouseXtoSample(x);
-        const amp = mouseYtoAmp(y);
-        const samplesPerPixel = audioBuffer.length / waveform.canvasWidth / zoomFactor;
+        drawAtPosition(x, y);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -329,6 +328,12 @@ async function init() {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
     }
     waveform.plot(audioBuffer);
+}
+
+function drawAtPosition(mouseX, mouseY) {
+    const sampleIdx = mouseXtoSample(mouseX);
+    const amp = mouseYtoAmp(mouseY);
+    const samplesPerPixel = audioBuffer.length / waveform.canvasWidth / zoomFactor;
 }
 
 function mouseXtoSample(mouseX) {
