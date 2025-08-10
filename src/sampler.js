@@ -24,6 +24,11 @@ class SamplerProcessor extends AudioWorkletProcessor {
                 this.targetPosition = position * (this.buffer.length - 1);
                 this.isPlaying = true;
             }
+        } else if (action === 'setBlock') {
+            const { offset, samples } = event.data;
+            if (this.buffer && offset >= 0 && offset + samples.length <= this.buffer.length) {
+                this.buffer.set(samples, offset);
+            }
         } else if (action === 'setBuffer') {
             const { buffer } = event.data;
             this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;

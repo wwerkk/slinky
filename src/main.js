@@ -340,15 +340,19 @@ function drawAtPosition(mouseX, mouseY) {
     const amp = mouseYtoAmp(mouseY);
 
     const channel = audioBuffer.getChannelData(0);
-    
-    if (sampleIdx >= 0 && sampleIdx < channel.length) channel[sampleIdx] = amp;
 
-    samplerNode.port.postMessage({
-        action: 'setBuffer',
-        buffer: channel.buffer
-    }, [channel.buffer.slice()]);
+    if (sampleIdx >= 0 && sampleIdx < channel.length) {
+        channel[sampleIdx] = amp;
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        samplerNode.port.postMessage({
+            action: 'setBlock',
+            offset: sampleIdx,
+            samples: new Float32Array([amp]),
+        });
+
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+    }
+
 }
 
 function drawLine(x1, y1, x2, y2) {
@@ -366,6 +370,7 @@ function drawLine(x1, y1, x2, y2) {
     }
 
     const channel = audioBuffer.getChannelData(0);
+    const block = [];
 
     for (let sampleIdx = minSample; sampleIdx <= maxSample; sampleIdx++) {
         const t = (sampleIdx - startSample) / (endSample - startSample);
@@ -373,13 +378,15 @@ function drawLine(x1, y1, x2, y2) {
 
         if (sampleIdx >= 0 && sampleIdx < channel.length) {
             channel[sampleIdx] = amplitude;
+            block[sampleIdx - minSample] = amplitude;
         }
     }
 
     samplerNode.port.postMessage({
-        action: 'setBuffer',
-        buffer: channel.buffer
-    }, [channel.buffer.slice()]);
+        action: 'setBlock',
+        offset: minSample,
+        samples: new Float32Array(block)
+    });
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
