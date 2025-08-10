@@ -254,6 +254,8 @@ function beginInteraction(x, y) {
     isInteracting = true;
     if (drawMode) {
         drawAtPosition(x, y);
+
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     }
     lastMouseX = x;
     lastMouseY = y;
@@ -278,11 +280,12 @@ function handleInteraction(x, y) {
             position: playheadPosition
         });
 
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
         positionSliderValue.textContent = playheadPosition.toFixed(2);
         positionSlider.value = playheadPosition.toFixed(2);
         lastMouseX = x;
     }
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
 async function init() {
@@ -341,10 +344,7 @@ function drawAtPosition(mouseX, mouseY) {
             offset: sampleIdx,
             samples: new Float32Array([amp]),
         });
-
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     }
-
 }
 
 function drawLine(x1, y1, x2, y2) {
@@ -379,8 +379,6 @@ function drawLine(x1, y1, x2, y2) {
         offset: minSample,
         samples: new Float32Array(block)
     });
-
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
 function mouseXtoSample(mouseX) {
