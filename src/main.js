@@ -3,8 +3,8 @@ import { Waveform } from './waveform.js';
 const WAVEFORM_CANVAS_ID = 'waveformCanvas';
 const PLAYHEAD_ID = 'playhead';
 
-const MIN_ZOOM = 0.125;
-const MAX_ZOOM = 8;
+const MIN_ZOOM = 1 / 32;
+const MAX_ZOOM = 32;
 
 let audioContext;
 let audioBuffer;
@@ -18,8 +18,10 @@ let isRecording = false;
 let waveform;
 let isInteracting = false;
 let lastMouseX = null;
+let lastMouseY = null;
 let playheadPosition = 0;
 let zoomFactor = 1;
+let drawMode = false;
 
 document.addEventListener('dragover', (event) => { event.preventDefault(); });
 document.addEventListener('drop', handleDrop);
@@ -27,6 +29,10 @@ document.addEventListener('drop', handleDrop);
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
 recordButton.addEventListener('touchstart', handleRecordButtonTouch);
+
+const drawButton = document.getElementById('drawButton');
+drawButton.addEventListener('click', toggleDrawMode);
+drawButton.addEventListener('touchstart', handleDrawButtonTouch);
 
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
@@ -36,11 +42,11 @@ const zoomSlider = document.getElementById('zoomSlider');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
-    beginInteraction(event.clientX);
+    beginInteraction(event.clientX, event.clientY);
 }); // begin interaction on click inside canvas
 document.addEventListener('mousemove', (event) => {
     if (!audioBuffer || !isInteracting) return;
-    handleInteraction(event.clientX);
+    handleInteraction(event.clientX, event.clientY);
 });
 document.addEventListener('mouseup', (event) => {
     isInteracting = false;
@@ -48,12 +54,12 @@ document.addEventListener('mouseup', (event) => {
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', (event) => {
     event.preventDefault();
-    beginInteraction(event.touches[0].clientX);
+    beginInteraction(event.touches[0].clientX, event.touches[0].clientY);
 }); // begin interaction on touch inside canvas
 document.addEventListener('touchmove', (event) => {
     event.preventDefault();
     if (!audioBuffer || !isInteracting) return;
-    handleInteraction(event.touches[0].clientX);
+    handleInteraction(event.touches[0].clientX, event.touches[0].clientY);
 });
 document.addEventListener('touchend', (event) => {
     event.preventDefault();
@@ -195,6 +201,23 @@ function handleRecordButtonTouch(event) {
     toggleRecording();
 }
 
+function toggleDrawMode() {
+    drawMode = !drawMode;
+    const drawButton = document.getElementById('drawButton');
+
+    if (drawMode) {
+        drawButton.classList.add('active');
+    } else {
+        drawButton.classList.remove('active');
+    }
+}
+
+function handleDrawButtonTouch(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleDrawMode();
+}
+
 function handlePositionSliderChange(event) {
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
@@ -232,36 +255,48 @@ function handleZoomSliderChange(event) {
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
-function beginInteraction(x) {
+function beginInteraction(x, y) {
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
-
     isInteracting = true;
+    if (drawMode) {
+        drawAtPosition(x, y);
+    }
     lastMouseX = x;
+    lastMouseY = y;
 }
 
-function handleInteraction(x) {
-    const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
-    const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
-    const delta = last - current;
-    playheadPosition += delta / zoomFactor;
+function handleInteraction(x, y) {
+    if (drawMode) {
+        if (lastMouseX !== null && lastMouseY !== null) {
+            drawLine(lastMouseX, lastMouseY, x, y);
+        }
 
-    samplerNode.port.postMessage({
-        action: 'updatePosition',
-        position: playheadPosition
-    });
+        lastMouseX = x;
+        lastMouseY = y;
+    } else {
+        const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
+        const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
+        const delta = last - current;
+        playheadPosition += delta / zoomFactor;
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
-    positionSliderValue.textContent = playheadPosition.toFixed(2);
-    positionSlider.value = playheadPosition.toFixed(2);
-    lastMouseX = x;
+        samplerNode.port.postMessage({
+            action: 'updatePosition',
+            position: playheadPosition
+        });
+
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        positionSliderValue.textContent = playheadPosition.toFixed(2);
+        positionSlider.value = playheadPosition.toFixed(2);
+        lastMouseX = x;
+    }
 }
 
 async function init() {
     function generateSine(sampleRate = 44100) {
         const duration = 1; // seconds
-        const frequency = 440; // Hz
+        const frequency = 441; // Hz
         const amplitude = 0.5;
         const length = sampleRate * duration;
 
@@ -298,4 +333,66 @@ async function init() {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
     }
     waveform.plot(audioBuffer);
+}
+
+function drawAtPosition(mouseX, mouseY) {
+    const sampleIdx = mouseXtoSample(mouseX);
+    const amp = mouseYtoAmp(mouseY);
+
+    const channel = audioBuffer.getChannelData(0);
+    if (channel[sampleIdx]) channel[sampleIdx] = amp;
+
+    samplerNode.port.postMessage({
+        action: 'setBuffer',
+        buffer: channel.buffer
+    }, [channel.buffer.slice()]);
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+}
+
+function drawLine(x1, y1, x2, y2) {
+    const startSample = mouseXtoSample(x1);
+    const endSample = mouseXtoSample(x2);
+    const startAmp = mouseYtoAmp(y1);
+    const endAmp = mouseYtoAmp(y2);
+
+    const minSample = Math.min(startSample, endSample);
+    const maxSample = Math.max(startSample, endSample);
+
+    if (maxSample - minSample <= 1) {
+        drawAtPosition(x2, y2);
+        return;
+    }
+
+    for (let sampleIndex = minSample; sampleIndex <= maxSample; sampleIndex++) {
+        const t = (sampleIndex - startSample) / (endSample - startSample);
+        const amplitude = startAmp + t * (endAmp - startAmp);
+
+        if (sampleIndex >= 0 && sampleIndex < channelData.length) {
+            channelData[sampleIndex] = amplitude
+        }
+    }
+
+    samplerNode.port.postMessage({
+        action: 'setBuffer',
+        buffer: channelData.buffer
+    });
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+}
+
+function mouseXtoSample(mouseX) {
+    const bufferLength = audioBuffer.length;
+    const canvasWidth = waveform.canvasWidth;
+    const position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
+
+    const idx = (playheadPosition + position / zoomFactor) * bufferLength;
+    return Math.floor(idx);
+}
+
+function mouseYtoAmp(mouseY) {
+    const canvasHeight = waveform.canvasHeight;
+    const y = mouseY / canvasHeight;
+
+    return 1 - (2 * y)
 }

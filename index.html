@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Player</title>
+    <title>slinky</title>
     <style>
       html,
       body {
@@ -55,7 +55,6 @@
       }
       #recordButton:hover {
         background-color: #b91c1c;
-        transform: scale(1.05);
       }
       #recordButton.waiting {
         background-color: #f5610b;
@@ -69,11 +68,9 @@
         0%,
         100% {
           opacity: 1;
-          transform: scale(1);
         }
         50% {
           opacity: 0.7;
-          transform: scale(1.1);
         }
       }
       @keyframes recordBlink {
@@ -83,6 +80,47 @@
         50% {
           background-color: #671212;
         }
+      }
+
+      #drawButton {
+        position: absolute;
+        top: 20px;
+        left: 80px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0px solid #000;
+        background-color: #0000008a;
+        cursor: pointer;
+        z-index: 10;
+        touch-action: manipulation;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #drawButton:hover {
+        background-color: #29292981;
+      }
+
+      #drawButton.active {
+        background-color: #000000;
+      }
+
+      #drawButton.active:hover {
+        background-color: #292929;
+      }
+
+      #drawButton svg {
+        width: 20px;
+        height: 20px;
+        fill: rgb(0, 0, 0);
+      }
+
+      #drawButton.active svg {
+        width: 20px;
+        height: 20px;
+        fill: rgb(255, 255, 255);
       }
 
       #positionControl {
@@ -126,12 +164,51 @@
         width: 200px;
       }
 
-      @media (max-width: 768px) {
+      @media (max-width: 768px) and (orientation: portrait) {
         #recordButton {
           width: 50px;
           height: 50px;
           top: 15px;
           left: 15px;
+        }
+
+        #drawButton {
+          width: 50px;
+          height: 50px;
+          top: 70px;
+          left: 15px;
+        }
+
+        #positionControl {
+          padding: 6px 10px;
+        }
+
+        #positionSlider {
+          width: 150px;
+        }
+
+        #zoomControl {
+          padding: 6px 10px;
+        }
+
+        #zoomSlider {
+          width: 150px;
+        }
+      }
+
+      @media (max-width: 768px) and (orientation: landscape) {
+        #recordButton {
+          width: 50px;
+          height: 50px;
+          top: 15px;
+          left: 15px;
+        }
+
+        #drawButton {
+          width: 50px;
+          height: 50px;
+          top: 15px;
+          left: 70px;
         }
 
         #positionControl {
@@ -157,6 +234,13 @@
       <canvas id="waveformCanvas"></canvas>
       <div id="playhead"></div>
       <button id="recordButton" title="Record Audio"></button>
+      <button id="drawButton" title="Draw Mode">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          />
+        </svg>
+      </button>
       <div id="positionControl">
         <input
           type="range"
