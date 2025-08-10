@@ -44,7 +44,23 @@ drawButton.addEventListener('touchstart', (event) => {
 
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
-positionSlider.addEventListener('input', handlePositionSliderChange);
+positionSlider.addEventListener('input', (event) => {
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    playheadPosition = parseFloat(event.target.value);
+    positionSliderValue.textContent = playheadPosition.toFixed(2);
+
+    samplerNode.port.postMessage({
+        action: 'setPosition',
+        position: playheadPosition
+    });
+
+    if (audioBuffer) {
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+    }
+});
 
 const zoomSlider = document.getElementById('zoomSlider');
 zoomSlider.addEventListener('input', handleZoomSliderChange);
@@ -211,24 +227,6 @@ function toggleDrawMode() {
         drawButton.classList.add('active');
     } else {
         drawButton.classList.remove('active');
-    }
-}
-
-function handlePositionSliderChange(event) {
-    if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-
-    playheadPosition = parseFloat(event.target.value);
-    positionSliderValue.textContent = playheadPosition.toFixed(2);
-
-    samplerNode.port.postMessage({
-        action: 'setPosition',
-        position: playheadPosition
-    });
-
-    if (audioBuffer) {
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
     }
 }
 
