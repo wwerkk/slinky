@@ -67,7 +67,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
         return ((a * t + b) * t + c) * t + y1;
     }
 
-    process(inputs, outputs, parameters) {
+    process(inputs, outputs) {
         const output = outputs[0];
         const channelCount = output.length;
 
