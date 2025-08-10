@@ -58,7 +58,7 @@ positionSlider.addEventListener('input', (event) => {
     });
 
     if (audioBuffer) {
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        waveform.plot(playheadPosition, zoomFactor);
     }
 });
 
@@ -79,7 +79,7 @@ zoomSlider.addEventListener('input', (event) => {
     }
     zoomFactor = v;
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+    waveform.plot(playheadPosition, zoomFactor);
 });
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
@@ -142,7 +142,9 @@ async function handleDrop(event) {
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
         positionSliderValue.textContent = playheadPosition.toFixed(2);
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+
+        waveform.compute(audioBuffer);
+        waveform.plot(playheadPosition, zoomFactor);
     };
 
     event.preventDefault();
@@ -196,7 +198,9 @@ async function toggleRecording() {
                     playheadPosition = 0;
                     positionSlider.value = playheadPosition;
                     positionSliderValue.textContent = playheadPosition.toFixed(2);
-                    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+
+                    waveform.compute(audioBuffer);
+                    waveform.plot(playheadPosition, zoomFactor);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -255,7 +259,8 @@ function beginInteraction(x, y) {
     if (drawMode) {
         drawAtPosition(x, y);
 
-        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        waveform.compute();
+        waveform.plot(playheadPosition, zoomFactor);
     }
     lastMouseX = x;
     lastMouseY = y;
@@ -269,6 +274,8 @@ function handleInteraction(x, y) {
 
         lastMouseX = x;
         lastMouseY = y;
+
+        waveform.compute();
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -285,7 +292,7 @@ function handleInteraction(x, y) {
         lastMouseX = x;
     }
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+    waveform.plot(playheadPosition, zoomFactor);
 }
 
 async function init() {
@@ -327,7 +334,9 @@ async function init() {
     if (!waveform) {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
     }
-    waveform.plot(audioBuffer);
+
+    waveform.compute(audioBuffer);
+    waveform.plot(playheadPosition, zoomFactor);
 }
 
 function drawAtPosition(mouseX, mouseY) {
