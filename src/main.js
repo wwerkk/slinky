@@ -227,7 +227,7 @@ function handlePositionSliderChange(event) {
     positionSliderValue.textContent = playheadPosition.toFixed(2);
 
     samplerNode.port.postMessage({
-        action: 'updatePosition',
+        action: 'setPosition',
         position: playheadPosition
     });
 
@@ -282,7 +282,7 @@ function handleInteraction(x, y) {
         playheadPosition += delta / zoomFactor;
 
         samplerNode.port.postMessage({
-            action: 'updatePosition',
+            action: 'setPosition',
             position: playheadPosition
         });
 
@@ -340,14 +340,19 @@ function drawAtPosition(mouseX, mouseY) {
     const amp = mouseYtoAmp(mouseY);
 
     const channel = audioBuffer.getChannelData(0);
-    if (channel[sampleIdx]) channel[sampleIdx] = amp;
 
-    samplerNode.port.postMessage({
-        action: 'setBuffer',
-        buffer: channel.buffer
-    }, [channel.buffer.slice()]);
+    if (sampleIdx >= 0 && sampleIdx < channel.length) {
+        channel[sampleIdx] = amp;
 
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+        samplerNode.port.postMessage({
+            action: 'setBlock',
+            offset: sampleIdx,
+            samples: new Float32Array([amp]),
+        });
+
+        waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+    }
+
 }
 
 function drawLine(x1, y1, x2, y2) {
@@ -364,18 +369,23 @@ function drawLine(x1, y1, x2, y2) {
         return;
     }
 
-    for (let sampleIndex = minSample; sampleIndex <= maxSample; sampleIndex++) {
-        const t = (sampleIndex - startSample) / (endSample - startSample);
-        const amplitude = startAmp + t * (endAmp - startAmp);
+    const channel = audioBuffer.getChannelData(0);
+    const block = [];
 
-        if (sampleIndex >= 0 && sampleIndex < channelData.length) {
-            channelData[sampleIndex] = amplitude
+    for (let sampleIdx = minSample; sampleIdx <= maxSample; sampleIdx++) {
+        const t = (sampleIdx - startSample) / (endSample - startSample);
+        const amp = startAmp + t * (endAmp - startAmp);
+
+        if (sampleIdx >= 0 && sampleIdx < channel.length) {
+            channel[sampleIdx] = amp;
+            block[sampleIdx - minSample] = amp;
         }
     }
 
     samplerNode.port.postMessage({
-        action: 'setBuffer',
-        buffer: channelData.buffer
+        action: 'setBlock',
+        offset: minSample,
+        samples: new Float32Array(block)
     });
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
@@ -394,5 +404,5 @@ function mouseYtoAmp(mouseY) {
     const canvasHeight = waveform.canvasHeight;
     const y = mouseY / canvasHeight;
 
-    return 1 - (2 * y)
+    return 1 - (2 * y);
 }

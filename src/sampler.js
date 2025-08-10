@@ -16,15 +16,21 @@ class SamplerProcessor extends AudioWorkletProcessor {
     }
 
     handleMessage(event) {
-        const { action, buffer, position } = event.data;
+        const { action } = event.data;
 
-        if (action === 'updatePosition') {
+        if (action === 'setPosition') {
+            const { position } = event.data;
             if (this.buffer) {
                 this.targetPosition = position * (this.buffer.length - 1);
-
                 this.isPlaying = true;
             }
+        } else if (action === 'setBlock') {
+            const { offset, samples } = event.data;
+            if (this.buffer && offset >= 0 && offset + samples.length <= this.buffer.length) {
+                this.buffer.set(samples, offset);
+            }
         } else if (action === 'setBuffer') {
+            const { buffer } = event.data;
             this.buffer = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
             this.targetPosition = 0;
             this.currentPosition = 0;
@@ -54,7 +60,6 @@ class SamplerProcessor extends AudioWorkletProcessor {
         const t = fraction;
         const t2 = t * t;
 
-        // Optimized computation
         const a = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
         const b = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
         const c = 0.5 * (y2 - y0);
