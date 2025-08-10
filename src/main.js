@@ -227,7 +227,7 @@ function handlePositionSliderChange(event) {
     positionSliderValue.textContent = playheadPosition.toFixed(2);
 
     samplerNode.port.postMessage({
-        action: 'updatePosition',
+        action: 'setPosition',
         position: playheadPosition
     });
 
@@ -282,7 +282,7 @@ function handleInteraction(x, y) {
         playheadPosition += delta / zoomFactor;
 
         samplerNode.port.postMessage({
-            action: 'updatePosition',
+            action: 'setPosition',
             position: playheadPosition
         });
 

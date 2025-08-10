@@ -18,7 +18,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
     handleMessage(event) {
         const { action, buffer, position } = event.data;
 
-        if (action === 'updatePosition') {
+        if (action === 'setPosition') {
             if (this.buffer) {
                 this.targetPosition = position * (this.buffer.length - 1);
 
