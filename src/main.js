@@ -63,7 +63,24 @@ positionSlider.addEventListener('input', (event) => {
 });
 
 const zoomSlider = document.getElementById('zoomSlider');
-zoomSlider.addEventListener('input', handleZoomSliderChange);
+zoomSlider.addEventListener('input', (event) => {
+    let v = parseFloat(event.target.value);
+    let k = 2;
+    if (Math.abs(v) < 0.05) {
+        v = 0; // snap to 0
+        zoomSlider.value = v.toFixed(2);
+    }
+    if (v < 0) {
+        v = 1 + (MIN_ZOOM - 1) * Math.pow(-v, k);
+    } else if (v > 0) {
+        v = 1 + (MAX_ZOOM - 1) * Math.pow(v, k);
+    } else {
+        v = 1;
+    }
+    zoomFactor = v;
+
+    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
+});
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
     beginInteraction(event.clientX, event.clientY);
@@ -228,25 +245,6 @@ function toggleDrawMode() {
     } else {
         drawButton.classList.remove('active');
     }
-}
-
-function handleZoomSliderChange(event) {
-    let v = parseFloat(event.target.value);
-    let k = 2;
-    if (Math.abs(v) < 0.05) {
-        v = 0; // snap to 0
-        zoomSlider.value = v.toFixed(2);
-    }
-    if (v < 0) {
-        v = 1 + (MIN_ZOOM - 1) * Math.pow(-v, k);
-    } else if (v > 0) {
-        v = 1 + (MAX_ZOOM - 1) * Math.pow(v, k);
-    } else {
-        v = 1;
-    }
-    zoomFactor = v;
-
-    waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
 
 function beginInteraction(x, y) {
