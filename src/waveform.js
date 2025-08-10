@@ -32,7 +32,7 @@ export class Waveform {
         if (buffer !== null) {
             this.currentBuffer = buffer;
         }
-        
+
         const channelData = this.currentBuffer.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const upscaledWidth = dataLength * this.upscaleFactor;
