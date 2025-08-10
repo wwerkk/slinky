@@ -58,7 +58,7 @@ positionSlider.addEventListener('input', (event) => {
     });
 
     if (audioBuffer) {
-        waveform.plot(playheadPosition, zoomFactor);
+        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
 });
 
@@ -144,7 +144,7 @@ async function handleDrop(event) {
         positionSliderValue.textContent = playheadPosition.toFixed(2);
 
         waveform.compute(audioBuffer);
-        waveform.plot(playheadPosition, zoomFactor);
+        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     };
 
     event.preventDefault();
@@ -200,7 +200,7 @@ async function toggleRecording() {
                     positionSliderValue.textContent = playheadPosition.toFixed(2);
 
                     waveform.compute(audioBuffer);
-                    waveform.plot(playheadPosition, zoomFactor);
+                    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -260,7 +260,7 @@ function beginInteraction(x, y) {
         drawAtPosition(x, y);
 
         waveform.compute();
-        waveform.plot(playheadPosition, zoomFactor);
+        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
     lastMouseY = y;
@@ -292,7 +292,7 @@ function handleInteraction(x, y) {
         lastMouseX = x;
     }
 
-    waveform.plot(playheadPosition, zoomFactor);
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
 async function init() {
@@ -336,7 +336,7 @@ async function init() {
     }
 
     waveform.compute(audioBuffer);
-    waveform.plot(playheadPosition, zoomFactor);
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
 function drawAtPosition(mouseX, mouseY) {
