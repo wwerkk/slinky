@@ -394,5 +394,5 @@ function mouseYtoAmp(mouseY) {
     const canvasHeight = waveform.canvasHeight;
     const y = mouseY / canvasHeight;
 
-    return 1 - (2 * y)
+    return 1 - (2 * y);
 }
