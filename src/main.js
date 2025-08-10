@@ -364,19 +364,21 @@ function drawLine(x1, y1, x2, y2) {
         return;
     }
 
-    for (let sampleIndex = minSample; sampleIndex <= maxSample; sampleIndex++) {
-        const t = (sampleIndex - startSample) / (endSample - startSample);
+    const channel = audioBuffer.getChannelData(0);
+
+    for (let sampleIdx = minSample; sampleIdx <= maxSample; sampleIdx++) {
+        const t = (sampleIdx - startSample) / (endSample - startSample);
         const amplitude = startAmp + t * (endAmp - startAmp);
 
-        if (sampleIndex >= 0 && sampleIndex < channelData.length) {
-            channelData[sampleIndex] = amplitude
+        if (sampleIdx >= 0 && sampleIdx < channel.length) {
+            channel[sampleIdx] = amplitude;
         }
     }
 
     samplerNode.port.postMessage({
         action: 'setBuffer',
-        buffer: channelData.buffer
-    });
+        buffer: channel.buffer
+    }, [channel.buffer.slice()]);
 
     waveform.plot(audioBuffer, playheadPosition, zoomFactor);
 }
