@@ -374,11 +374,11 @@ function drawLine(x1, y1, x2, y2) {
 
     for (let sampleIdx = minSample; sampleIdx <= maxSample; sampleIdx++) {
         const t = (sampleIdx - startSample) / (endSample - startSample);
-        const amplitude = startAmp + t * (endAmp - startAmp);
+        const amp = startAmp + t * (endAmp - startAmp);
 
         if (sampleIdx >= 0 && sampleIdx < channel.length) {
-            channel[sampleIdx] = amplitude;
-            block[sampleIdx - minSample] = amplitude;
+            channel[sampleIdx] = amp;
+            block[sampleIdx - minSample] = amp;
         }
     }
 
