@@ -28,11 +28,19 @@ document.addEventListener('drop', handleDrop);
 
 const recordButton = document.getElementById('recordButton');
 recordButton.addEventListener('click', toggleRecording);
-recordButton.addEventListener('touchstart', handleRecordButtonTouch);
+recordButton.addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleRecording();
+});
 
 const drawButton = document.getElementById('drawButton');
 drawButton.addEventListener('click', toggleDrawMode);
-drawButton.addEventListener('touchstart', handleDrawButtonTouch);
+drawButton.addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleDrawMode();
+});
 
 const positionSlider = document.getElementById('positionSlider');
 const positionSliderValue = document.getElementById('positionSliderValue');
@@ -195,12 +203,6 @@ async function toggleRecording() {
     }
 }
 
-function handleRecordButtonTouch(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    toggleRecording();
-}
-
 function toggleDrawMode() {
     drawMode = !drawMode;
     const drawButton = document.getElementById('drawButton');
@@ -210,12 +212,6 @@ function toggleDrawMode() {
     } else {
         drawButton.classList.remove('active');
     }
-}
-
-function handleDrawButtonTouch(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    toggleDrawMode();
 }
 
 function handlePositionSliderChange(event) {
