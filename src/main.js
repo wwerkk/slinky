@@ -79,7 +79,7 @@ zoomSlider.addEventListener('input', (event) => {
     }
     zoomFactor = v;
 
-    waveform.plot(playheadPosition, zoomFactor);
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 });
 
 document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event) => {
