@@ -299,7 +299,7 @@ function handleInteraction(x, y) {
 
 async function init() {
     function generateSine(sampleRate = 44100) {
-        const duration = 1; // seconds
+        const duration = 2; // seconds
         const frequency = 441; // Hz
         const amplitude = 0.5;
         const length = sampleRate * duration;
