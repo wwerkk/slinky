@@ -1,9 +1,10 @@
 export class Waveform {
-    constructor(canvasId, playheadId) {
+    constructor(canvasId, playheadId, sampleRate) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
         this.currentBuffer = null;
+        this.sampleRate = sampleRate;
         this.playheadPosition = 0;
         this.zoomFactor = 1;
         this.upscaleFactor = 1;
@@ -66,9 +67,8 @@ export class Waveform {
         this.#updateCanvasSize();
 
         if (this.currentBuffer && this.waveformPoints.length > 0) {
-            const dataLength =  this.currentBuffer.getChannelData(0).length; // use the first channel
+            const upscaledWidth = this.sampleRate * this.upscaleFactor;
             const amp = this.canvasHeight / 2;
-            const upscaledWidth = dataLength * this.upscaleFactor;
 
             this.ctx.strokeStyle = 'black';
             this.ctx.lineWidth = 1;
@@ -76,7 +76,7 @@ export class Waveform {
             this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.ctx.beginPath();
 
-            const visibleRange = 1.0 / this.zoomFactor;
+            const visibleRange = 1.0 / this.zoomFactor; // 1 second
             const viewOffset = position - visibleRange / 2;
 
             for (let i = 0; i < this.canvasWidth; i++) {

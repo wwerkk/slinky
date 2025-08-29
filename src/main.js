@@ -334,7 +334,7 @@ async function init() {
     }, [channelData.buffer.slice()]);
 
     if (!waveform) {
-        waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID);
+        waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID, audioContext.sampleRate);
     }
 
     waveform.compute(audioBuffer);
@@ -393,11 +393,10 @@ function drawLine(x1, y1, x2, y2) {
 }
 
 function mouseXtoSample(mouseX) {
-    const bufferLength = audioBuffer.length;
     const canvasWidth = waveform.canvasWidth;
     const position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
 
-    const idx = (playheadPosition + position / zoomFactor) * bufferLength;
+    const idx = (playheadPosition + position / zoomFactor) * audioContext.sampleRate;
     return Math.floor(idx);
 }
 

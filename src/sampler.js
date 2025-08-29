@@ -21,7 +21,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
         if (action === 'setPosition') {
             const { position } = event.data;
             if (this.buffer) {
-                this.targetPosition = position * (this.buffer.length - 1);
+                this.targetPosition = position * sampleRate;
                 this.isPlaying = true;
             }
         } else if (action === 'setBlock') {
