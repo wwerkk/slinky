@@ -58,8 +58,6 @@ class SamplerProcessor extends AudioWorkletProcessor {
         const y3 = this.buffer[index + 2];
 
         const t = fraction;
-        const t2 = t * t;
-
         const a = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
         const b = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
         const c = 0.5 * (y2 - y0);
