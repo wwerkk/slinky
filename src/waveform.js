@@ -66,8 +66,7 @@ export class Waveform {
         this.#updateCanvasSize();
 
         if (this.currentBuffer && this.waveformPoints.length > 0) {
-            const channelData = this.currentBuffer.getChannelData(0); // Use the first channel
-            const dataLength = channelData.length;
+            const dataLength =  this.currentBuffer.getChannelData(0).length; // use the first channel
             const amp = this.canvasHeight / 2;
             const upscaledWidth = dataLength * this.upscaleFactor;
 
