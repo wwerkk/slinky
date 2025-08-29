@@ -18,7 +18,6 @@ let isRecording = false;
 let waveform;
 let isInteracting = false;
 let lastMouseX = null;
-let lastMouseY = null;
 let playheadPosition = 0;
 let zoomFactor = 1;
 let drawMode = false;
@@ -265,17 +264,11 @@ function beginInteraction(x, y) {
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
-    lastMouseY = y;
 }
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        if (lastMouseX !== null && lastMouseY !== null) {
-            drawLine(lastMouseX, lastMouseY, x, y);
-        }
-
-        lastMouseX = x;
-        lastMouseY = y;
+        drawAtPosition(x, y);
 
         waveform.compute();
     } else {
@@ -354,42 +347,8 @@ function drawAtPosition(mouseX, mouseY) {
             action: 'setBlock',
             offset: sampleIdx,
             samples: new Float32Array([amp]),
-        });
+        }); // probably not the most optimal when drawing multiple samples in a single drag
     }
-}
-
-function drawLine(x1, y1, x2, y2) {
-    const startSample = mouseXtoSample(x1);
-    const endSample = mouseXtoSample(x2);
-    const startAmp = mouseYtoAmp(y1);
-    const endAmp = mouseYtoAmp(y2);
-
-    const minSample = Math.min(startSample, endSample);
-    const maxSample = Math.max(startSample, endSample);
-
-    if (maxSample - minSample <= 1) {
-        drawAtPosition(x2, y2);
-        return;
-    }
-
-    const channel = audioBuffer.getChannelData(0);
-    const block = [];
-
-    for (let sampleIdx = minSample; sampleIdx <= maxSample; sampleIdx++) {
-        const t = (sampleIdx - startSample) / (endSample - startSample);
-        const amp = startAmp + t * (endAmp - startAmp);
-
-        if (sampleIdx >= 0 && sampleIdx < channel.length) {
-            channel[sampleIdx] = amp;
-            block[sampleIdx - minSample] = amp;
-        }
-    }
-
-    samplerNode.port.postMessage({
-        action: 'setBlock',
-        offset: minSample,
-        samples: new Float32Array(block)
-    });
 }
 
 function mouseXtoSample(mouseX) {
