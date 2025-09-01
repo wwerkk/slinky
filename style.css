@@ -26,8 +26,7 @@ body {
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translateX(-125%);
-  transform: translateY(12.5%);
+  transform: translate(-50%, 12.5%);
   width: 2px;
   height: 80%;
   background-color: red;
