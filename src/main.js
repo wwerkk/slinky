@@ -142,8 +142,11 @@ async function handleDrop(event) {
         if (audioBuffer_.length + offset <= audioBuffer.length) {
             audioBuffer.copyToChannel(channelData_, 0, offset);
         } else if (audioBuffer_.length + offset > audioBuffer.length) {
-            console.warn('Loaded file longer than available buffer, truncating...'); // TODO: expand instead of truncating
-            audioBuffer.copyToChannel(channelData_, 0, offset);
+            const summedBuffer = audioContext.createBuffer(1, offset + audioBuffer_.length, audioContext.sampleRate);
+            summedBuffer.copyToChannel(channelData, 0, 0);
+            summedBuffer.copyToChannel(channelData_, 0, offset);
+            audioBuffer = summedBuffer;
+            channelData = audioBuffer.getChannelData(0);
         }
 
         if (samplerNode) {
