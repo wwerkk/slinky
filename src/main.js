@@ -129,9 +129,22 @@ async function handleDrop(event) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-        channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
+        const audioBuffer_ = await audioContext.decodeAudioData(arrayBuffer);
+        if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
+        const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
+
+        // replace buffer data starting from the current playhead position
+        const offset = Math.floor(playheadPosition * audioContext.sampleRate);
+        if (offset < 0) {
+            console.warn('Negative playhead position is not supported for now, resetting to 0.');
+            playheadPosition = 0;
+        }
+        if (audioBuffer_.length + offset <= audioBuffer.length) {
+            audioBuffer.copyToChannel(channelData_, 0, offset);
+        } else if (audioBuffer_.length + offset > audioBuffer.length) {
+            console.warn('Loaded file longer than available buffer, truncating...'); // TODO: expand instead of truncating
+            audioBuffer.copyToChannel(channelData_, 0, offset);
+        }
 
         if (samplerNode) {
             samplerNode.port.postMessage({
@@ -139,10 +152,6 @@ async function handleDrop(event) {
                 buffer: channelData.buffer
             }, [channelData.buffer.slice()]);
         }
-
-        playheadPosition = 0;
-        positionSlider.value = playheadPosition;
-        positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
 
         waveform.compute(audioBuffer);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
