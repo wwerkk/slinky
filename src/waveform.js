@@ -110,6 +110,58 @@ export class Waveform {
             }
 
             this.ctx.stroke();
+
+            this.#updateRuler(position, zoom);
+        }
+    }
+
+    #updateRuler(position, zoom) {
+        if (!this.currentBuffer) return;
+
+        const rulerElement = document.getElementById('ruler');
+        if (!rulerElement) return;
+
+        rulerElement.innerHTML = '';
+
+        const duration = this.currentBuffer.duration;
+        const visibleRange = 1.0 / zoom;
+        const viewOffset = position - visibleRange / 2;
+
+        const pixelsPerSecond = this.canvasWidth / visibleRange;
+        let tickSpacing = 1; // seconds
+
+        if (pixelsPerSecond < 50) {
+            tickSpacing = 5;
+        } else if (pixelsPerSecond < 100) {
+            tickSpacing = 2;
+        } else if (pixelsPerSecond < 200) {
+            tickSpacing = 1;
+        } else if (pixelsPerSecond < 500) {
+            tickSpacing = 0.5;
+        } else {
+            tickSpacing = 0.1;
+        }
+
+        const startTime = viewOffset * duration;
+        const endTime = (viewOffset + visibleRange) * duration;
+
+        for (let time = Math.ceil(startTime / tickSpacing) * tickSpacing; time <= endTime; time += tickSpacing) {
+            const relativeTime = time / duration;
+            const x = ((relativeTime - viewOffset) / visibleRange) * this.canvasWidth;
+
+            if (x >= 0 && x <= this.canvasWidth) {
+                const tickElement = document.createElement('div');
+                tickElement.className = 'ruler-tick';
+                tickElement.style.left = x + 'px';
+                rulerElement.appendChild(tickElement);
+
+                const labelElement = document.createElement('div');
+                labelElement.className = 'ruler-label';
+                labelElement.style.left = x + 'px';
+                const timeStr = Math.abs(time) >= 10 ? Math.floor(time) : time.toFixed(1);
+                labelElement.textContent = timeStr + 's';
+                rulerElement.appendChild(labelElement);
+            }
         }
     }
 }
