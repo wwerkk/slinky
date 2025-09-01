@@ -50,7 +50,7 @@ positionSlider.addEventListener('input', (event) => {
     }
 
     playheadPosition = parseFloat(event.target.value);
-    positionSliderValue.textContent = playheadPosition.toFixed(2);
+    positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
 
     samplerNode.port.postMessage({
         action: 'setPosition',
@@ -143,7 +143,7 @@ async function handleDrop(event) {
 
         playheadPosition = 0;
         positionSlider.value = playheadPosition;
-        positionSliderValue.textContent = playheadPosition.toFixed(2);
+        positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
 
         waveform.compute(audioBuffer);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
@@ -199,7 +199,7 @@ async function toggleRecording() {
 
                     playheadPosition = 0;
                     positionSlider.value = playheadPosition;
-                    positionSliderValue.textContent = playheadPosition.toFixed(2);
+                    positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
 
                     waveform.compute(audioBuffer);
                     requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
@@ -289,7 +289,7 @@ function handleInteraction(x, y) {
             position: playheadPosition
         });
 
-        positionSliderValue.textContent = playheadPosition.toFixed(2);
+        positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
         positionSlider.value = playheadPosition.toFixed(2);
         lastMouseX = x;
     }

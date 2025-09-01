@@ -136,6 +136,7 @@ body {
 
 #positionSliderValue {
   font-family: monospace;
+  font-weight: bold;
   min-width: 45px;
   text-align: center;
 }
