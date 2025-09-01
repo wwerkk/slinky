@@ -122,7 +122,6 @@ export class Waveform {
 
         rulerElement.innerHTML = '';
 
-        const duration = this.currentBuffer.duration;
         const visibleRange = 1.0 / zoom;
         const viewOffset = position - visibleRange / 2;
 
@@ -141,11 +140,11 @@ export class Waveform {
             tickSpacing = 0.1;
         }
 
-        const startTime = viewOffset * duration;
-        const endTime = (viewOffset + visibleRange) * duration;
+        const startTime = viewOffset;
+        const endTime = (viewOffset + visibleRange);
 
         for (let time = Math.ceil(startTime / tickSpacing) * tickSpacing; time <= endTime; time += tickSpacing) {
-            const relativeTime = time / duration;
+            const relativeTime = time;
             const x = ((relativeTime - viewOffset) / visibleRange) * this.canvasWidth;
 
             if (x >= 0 && x <= this.canvasWidth) {
