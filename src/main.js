@@ -258,9 +258,9 @@ function beginInteraction(x, y) {
     }
     isInteracting = true;
     if (drawMode) {
-        drawAtPosition(x, y);
+        const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute();
+        waveform.compute(bufferReplaced ? audioBuffer : null);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
@@ -268,9 +268,9 @@ function beginInteraction(x, y) {
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        drawAtPosition(x, y);
+        const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute();
+        waveform.compute(bufferReplaced ? audioBuffer : null);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -338,7 +338,9 @@ function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
 
-    if (sampleIdx >= 0 && sampleIdx < channelData.length) {
+    const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= channelData.length ? 1 : 0;
+
+    if (outOfBounds === 0) {
         channelData[sampleIdx] = amp;
 
         samplerNode.port.postMessage({
@@ -346,7 +348,22 @@ function drawAtPosition(mouseX, mouseY) {
             offset: sampleIdx,
             samples: new Float32Array([amp]),
         }); // probably not the most optimal when drawing multiple samples in a single drag
+    } else if (outOfBounds === 1) {
+        // add 15s margin to the right of the added sample
+        const audioBuffer_ = audioContext.createBuffer(1, sampleIdx + audioContext.sampleRate * 15, audioContext.sampleRate);
+        audioBuffer_.copyToChannel(channelData, 0);
+        audioBuffer = audioBuffer_;
+
+        channelData = audioBuffer.getChannelData(0);
+
+        channelData[sampleIdx] = amp;
+        samplerNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: channelData.slice()
+        }); // update samplerNode buffer
     }
+
+    return outOfBounds;
 }
 
 function mouseXtoSample(mouseX) {
