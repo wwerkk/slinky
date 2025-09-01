@@ -117,20 +117,8 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('drag', (event) => 
 
 init();
 
-async function handleDrop(event) {
-    const loadAudioFile = async (file) => {
-        const arrayBuffer = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsArrayBuffer(file);
-        });
-
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const audioBuffer_ = await audioContext.decodeAudioData(arrayBuffer);
-        if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
+function updateBufferData(audioBuffer_) {
+    if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
         const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
 
         // replace buffer data starting from the current playhead position
@@ -158,6 +146,23 @@ async function handleDrop(event) {
 
         waveform.compute(audioBuffer);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+}
+
+async function handleDrop(event) {
+    const loadAudioFile = async (file) => {
+        const arrayBuffer = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsArrayBuffer(file);
+        });
+
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const audioBuffer_ = await audioContext.decodeAudioData(arrayBuffer);
+
+        updateBufferData(audioBuffer_);
     };
 
     event.preventDefault();
@@ -198,22 +203,7 @@ async function toggleRecording() {
 
                 try {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    audioBuffer = recordedBuffer;
-                    channelData = audioBuffer.getChannelData(0);
-
-                    if (samplerNode) {
-                        samplerNode.port.postMessage({
-                            action: 'setBuffer',
-                            buffer: channelData.buffer
-                        }, [channelData.buffer.slice()]);
-                    }
-
-                    playheadPosition = 0;
-                    positionSlider.value = playheadPosition;
-                    positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
-
-                    waveform.compute(audioBuffer);
-                    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+                    updateBufferData(recordedBuffer);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
