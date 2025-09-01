@@ -117,7 +117,7 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('drag', (event) => 
 
 init();
 
-function updateBufferData(audioBuffer_) {
+function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
     if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
     const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
 
@@ -162,7 +162,7 @@ async function handleDrop(event) {
         }
         const audioBuffer_ = await audioContext.decodeAudioData(arrayBuffer);
 
-        updateBufferData(audioBuffer_);
+        updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition);
     };
 
     event.preventDefault();
@@ -203,7 +203,7 @@ async function toggleRecording() {
 
                 try {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    updateBufferData(recordedBuffer);
+                    updateBufferFromOffset(audioBuffer, recordedBuffer, playheadPosition);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
