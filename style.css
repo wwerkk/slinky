@@ -137,7 +137,7 @@ body {
 #positionSliderValue {
   font-family: monospace;
   min-width: 45px;
-  text-align: right;
+  text-align: center;
 }
 
 #zoomControl {
@@ -161,8 +161,7 @@ body {
 #zoomSliderValue {
   font-family: monospace;
   min-width: 45px;
-  text-align: right;
-  transform: translateX(100%);
+  text-align: center;
 }
 
 @media (max-width: 768px) and (orientation: portrait) {
