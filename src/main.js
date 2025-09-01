@@ -119,33 +119,33 @@ init();
 
 function updateBufferData(audioBuffer_) {
     if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-        const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
+    const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
 
-        // replace buffer data starting from the current playhead position
-        const offset = Math.floor(playheadPosition * audioContext.sampleRate);
-        if (offset < 0) {
-            console.warn('Negative playhead position is not supported for now, resetting to 0.');
-            playheadPosition = 0;
-        }
-        if (audioBuffer_.length + offset <= audioBuffer.length) {
-            audioBuffer.copyToChannel(channelData_, 0, offset);
-        } else if (audioBuffer_.length + offset > audioBuffer.length) {
-            const summedBuffer = audioContext.createBuffer(1, offset + audioBuffer_.length, audioContext.sampleRate);
-            summedBuffer.copyToChannel(channelData, 0, 0);
-            summedBuffer.copyToChannel(channelData_, 0, offset);
-            audioBuffer = summedBuffer;
-            channelData = audioBuffer.getChannelData(0);
-        }
+    // replace buffer data starting from the current playhead position
+    const offset = Math.floor(playheadPosition * audioContext.sampleRate);
+    if (offset < 0) {
+        console.warn('Negative playhead position is not supported for now, resetting to 0.');
+        playheadPosition = 0;
+    }
+    if (audioBuffer_.length + offset <= audioBuffer.length) {
+        audioBuffer.copyToChannel(channelData_, 0, offset);
+    } else if (audioBuffer_.length + offset > audioBuffer.length) {
+        const summedBuffer = audioContext.createBuffer(1, offset + audioBuffer_.length, audioContext.sampleRate);
+        summedBuffer.copyToChannel(channelData, 0, 0);
+        summedBuffer.copyToChannel(channelData_, 0, offset);
+        audioBuffer = summedBuffer;
+        channelData = audioBuffer.getChannelData(0);
+    }
 
-        if (samplerNode) {
-            samplerNode.port.postMessage({
-                action: 'setBuffer',
-                buffer: channelData.buffer
-            }, [channelData.buffer.slice()]);
-        }
+    if (samplerNode) {
+        samplerNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: channelData.buffer
+        }, [channelData.buffer.slice()]);
+    }
 
-        waveform.compute(audioBuffer);
-        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+    waveform.compute(audioBuffer);
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
 async function handleDrop(event) {
