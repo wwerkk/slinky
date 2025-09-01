@@ -338,10 +338,8 @@ function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
 
-    const channel = audioBuffer.getChannelData(0);
-
-    if (sampleIdx >= 0 && sampleIdx < channel.length) {
-        channel[sampleIdx] = amp;
+    if (sampleIdx >= 0 && sampleIdx < channelData.length) {
+        channelData[sampleIdx] = amp;
 
         samplerNode.port.postMessage({
             action: 'setBlock',
