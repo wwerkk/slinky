@@ -160,9 +160,9 @@ async function handleDrop(event) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
-        const audioBuffer_ = await audioContext.decodeAudioData(arrayBuffer);
+        const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition);
+        updateBufferFromOffset(audioBuffer, decodedBuffer, playheadPosition);
     };
 
     event.preventDefault();
