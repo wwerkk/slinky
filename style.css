@@ -154,6 +154,17 @@ body {
   z-index: 10;
 }
 
+#zoomSliderContainer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.zoom-label {
+  font-size: 20px;
+  user-select: none;
+}
+
 #zoomSlider {
   width: 200px;
 }
