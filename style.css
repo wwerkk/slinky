@@ -146,6 +146,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.2);
   padding: 8px 15px;
@@ -155,6 +156,13 @@ body {
 
 #zoomSlider {
   width: 200px;
+}
+
+#zoomSliderValue {
+  font-family: monospace;
+  min-width: 45px;
+  text-align: right;
+  transform: translateX(100%);
 }
 
 @media (max-width: 768px) and (orientation: portrait) {

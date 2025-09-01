@@ -63,6 +63,7 @@ positionSlider.addEventListener('input', (event) => {
 });
 
 const zoomSlider = document.getElementById('zoomSlider');
+const zoomSliderValue = document.getElementById('zoomSliderValue');
 zoomSlider.addEventListener('input', (event) => {
     let v = parseFloat(event.target.value);
     let k = 2;
@@ -77,6 +78,7 @@ zoomSlider.addEventListener('input', (event) => {
     } else {
         v = 1;
     }
+    zoomSliderValue.textContent = v >= 10 ? v.toFixed(1) + "x" : v.toFixed(2) + "x";
     zoomFactor = v;
 
     requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
