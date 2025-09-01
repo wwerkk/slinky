@@ -122,6 +122,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.3);
   padding: 8px 15px;
@@ -131,7 +132,6 @@ body {
 
 #positionSlider {
   width: 200px;
-  margin-right: 10px;
 }
 
 #positionSliderValue {
