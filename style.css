@@ -1,0 +1,222 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+#waveform {
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+}
+#waveformCanvas {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+}
+#playhead {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-125%);
+  width: 2px;
+  height: 100%;
+  background-color: red;
+  z-index: 10;
+  pointer-events: none;
+}
+#recordButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0px solid #000;
+  background-color: #671212;
+  cursor: pointer;
+  z-index: 10;
+  touch-action: manipulation;
+}
+#recordButton:hover {
+  background-color: #b91c1c;
+}
+#recordButton.waiting {
+  background-color: #f5610b;
+  animation: waitingPulse 0.8s infinite;
+}
+#recordButton.recording {
+  animation: recordBlink 1s infinite;
+  background-color: #dc2626;
+}
+@keyframes waitingPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes recordBlink {
+  0% {
+    background-color: #dc2626;
+  }
+  50% {
+    background-color: #671212;
+  }
+}
+
+#drawButton {
+  position: absolute;
+  top: 20px;
+  left: 80px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0px solid #000;
+  background-color: #0000008a;
+  cursor: pointer;
+  z-index: 10;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#drawButton:hover {
+  background-color: #29292981;
+}
+
+#drawButton.active {
+  background-color: #000000;
+}
+
+#drawButton.active:hover {
+  background-color: #292929;
+}
+
+#drawButton svg {
+  width: 20px;
+  height: 20px;
+  fill: rgb(0, 0, 0);
+}
+
+#drawButton.active svg {
+  width: 20px;
+  height: 20px;
+  fill: rgb(255, 255, 255);
+}
+
+#positionControl {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 8px 15px;
+  border-radius: 20px;
+  z-index: 10;
+}
+
+#positionSlider {
+  width: 200px;
+  margin-right: 10px;
+}
+
+#positionSliderValue {
+  font-family: monospace;
+  min-width: 45px;
+  text-align: right;
+}
+
+#zoomControl {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 8px 15px;
+  border-radius: 20px;
+  z-index: 10;
+}
+
+#zoomSlider {
+  width: 200px;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  #recordButton {
+    width: 50px;
+    height: 50px;
+    top: 15px;
+    left: 15px;
+  }
+
+  #drawButton {
+    width: 50px;
+    height: 50px;
+    top: 70px;
+    left: 15px;
+  }
+
+  #positionControl {
+    padding: 6px 10px;
+  }
+
+  #positionSlider {
+    width: 150px;
+  }
+
+  #zoomControl {
+    padding: 6px 10px;
+  }
+
+  #zoomSlider {
+    width: 150px;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  #recordButton {
+    width: 50px;
+    height: 50px;
+    top: 15px;
+    left: 15px;
+  }
+
+  #drawButton {
+    width: 50px;
+    height: 50px;
+    top: 15px;
+    left: 70px;
+  }
+
+  #positionControl {
+    padding: 6px 10px;
+  }
+
+  #positionSlider {
+    width: 150px;
+  }
+
+  #zoomControl {
+    padding: 6px 10px;
+  }
+
+  #zoomSlider {
+    width: 150px;
+  }
+}
