@@ -261,7 +261,7 @@ function beginInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(null, bufferReplaced ? bufferPost : null);
+        waveform.compute(bufferPre, bufferPost);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
@@ -271,7 +271,7 @@ function handleInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(null, bufferReplaced ? bufferPost : null);
+        waveform.compute(bufferPre, bufferPost);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
