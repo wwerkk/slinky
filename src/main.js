@@ -308,7 +308,7 @@ async function init() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (!bufferPre) {
-            bufferPre = generateSine(audioContext.sampleRate);
+            bufferPre = generateSine(audioContext.sampleRate, 0.25, 1);
         }
         if (!bufferPost) {
             bufferPost = generateSine(audioContext.sampleRate);
@@ -340,30 +340,34 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
-    const postData = bufferPost.getChannelData(0);
-    const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= postData.length ? 1 : 0;
+    const currentData = sampleIdx < 0 ? bufferPre.getChannelData(0) : bufferPost.getChannelData(0);
+    const outOfBounds = Math.abs(sampleIdx) >= currentData.length ? 1 : 0;
 
     if (outOfBounds === 0) {
-        postData[sampleIdx] = amp;
+        currentData[Math.abs(sampleIdx)] = amp;
 
-        samplerNode.port.postMessage({
-            action: 'setBlock',
-            offset: sampleIdx,
-            samples: new Float32Array([amp]),
-        }); // probably not the most optimal when drawing multiple samples in a single drag
+        // samplerNode.port.postMessage({
+        //     action: 'setBlock',
+        //     offset: sampleIdx,
+        //     samples: new Float32Array([amp]),
+        // }); // probably not the most optimal when drawing multiple samples in a single drag
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
-        const audioBuffer_ = audioContext.createBuffer(1, sampleIdx + audioContext.sampleRate * 15, audioContext.sampleRate);
-        audioBuffer_.copyToChannel(postData, 0);
-        bufferPost = audioBuffer_;
+        const audioBuffer_ = audioContext.createBuffer(1, Math.abs(sampleIdx) + audioContext.sampleRate * 15, audioContext.sampleRate);
+        audioBuffer_.copyToChannel(currentData, 0);
+        
+        if (sampleIdx < 0) {
+            bufferPre = audioBuffer_;
+        } else {
+            bufferPost = audioBuffer_;
+        }
 
-        postData = bufferPost.getChannelData(0);
-
-        postData[sampleIdx] = amp;
-        samplerNode.port.postMessage({
-            action: 'setBuffer',
-            buffer: postData.slice()
-        }); // update samplerNode buffer
+        currentData[sampleIdx] = amp;
+        
+        // samplerNode.port.postMessage({
+        //     action: 'setBuffer',
+        //     buffer: currentData.slice()
+        // }); // update samplerNode buffer
     }
 
     return outOfBounds;
@@ -371,7 +375,7 @@ function drawAtPosition(mouseX, mouseY) {
 
 function mouseXtoSample(mouseX) {
     const canvasWidth = waveform.canvasWidth;
-    const position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
+    let position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
 
     const idx = (playheadPosition + position / zoomFactor) * audioContext.sampleRate;
     return Math.floor(idx);
