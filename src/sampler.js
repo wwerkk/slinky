@@ -113,7 +113,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
             const currentBuffer = this.currentPosition < 0 ? this.bufferPre : this.bufferPost;
 
-            this.currentPosition = Math.abs(this.currentPosition) > this.preBuffer.length - 1 ? this.preBuffer.length - 1 :
+            this.currentPosition = Math.abs(this.currentPosition) > this.bufferPre.length - 1 ? this.bufferPre.length - 1 :
                 this.currentPosition > this.bufferPost.length - 1 ? this.bufferPost.length - 1
                     : this.currentPosition;
 
