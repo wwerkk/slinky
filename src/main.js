@@ -358,7 +358,7 @@ function drawAtPosition(mouseX, mouseY) {
         const audioBuffer_ = audioContext.createBuffer(1, idxAbs + audioContext.sampleRate * 15, audioContext.sampleRate);
         audioBuffer_.copyToChannel(currentData, 0);
         
-        if (sampleIdx < 0) {
+        if (isPre) {
             bufferPre = audioBuffer_;
         } else {
             bufferPost = audioBuffer_;
