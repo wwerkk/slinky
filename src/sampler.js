@@ -110,11 +110,16 @@ class SamplerProcessor extends AudioWorkletProcessor {
                 this.historyCount++;
             }
             this.currentPosition = this.runningSum / this.historyCount;
-            this.currentPosition = this.currentPosition < 0 ? 0 :
+
+            const currentBuffer = this.currentPosition < 0 ? this.bufferPre : this.bufferPost;
+
+            this.currentPosition = Math.abs(this.currentPosition) > this.preBuffer.length - 1 ? this.preBuffer.length - 1 :
                 this.currentPosition > this.bufferPost.length - 1 ? this.bufferPost.length - 1
                     : this.currentPosition;
 
-            let sample = this.hermiteSpline(this.currentPosition);
+            const absPosition = Math.abs(this.currentPosition);
+
+            let sample = this.hermiteSpline(absPosition);
 
             for (let channel = 0; channel < channelCount; channel++) {
                 output[channel][i] = sample;
