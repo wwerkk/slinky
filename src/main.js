@@ -55,9 +55,7 @@ positionSlider.addEventListener('input', (event) => {
         position: playheadPosition
     });
 
-    if (audioBuffer) {
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
-    }
 });
 
 const zoomSlider = document.getElementById('zoomSlider');
@@ -86,7 +84,7 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('mousedown', (event
     beginInteraction(event.clientX, event.clientY);
 }); // begin interaction on click inside canvas
 document.addEventListener('mousemove', (event) => {
-    if (!audioBuffer || !isInteracting) return;
+    if (!isInteracting) return;
     handleInteraction(event.clientX, event.clientY);
 });
 document.addEventListener('mouseup', (event) => {
@@ -99,7 +97,7 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('touchstart', (even
 }); // begin interaction on touch inside canvas
 document.addEventListener('touchmove', (event) => {
     event.preventDefault();
-    if (!audioBuffer || !isInteracting) return;
+    if (!isInteracting) return;
     handleInteraction(event.touches[0].clientX, event.touches[0].clientY);
 });
 document.addEventListener('touchend', (event) => {
