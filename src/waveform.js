@@ -79,7 +79,7 @@ export class Waveform {
         this.zoomFactor = zoom;
         this.#updateCanvasSize();
 
-        if (this.bufferPost && this.postWaveformPoints.length > 0) {
+        if ((this.preBuffer || this.postBuffer) && (this.preWaveformPoints || this.postWaveformPoints)) {
             const upscaledWidth = this.sampleRate * this.upscaleFactor;
             const amp = this.canvasHeight / 2;
 
@@ -89,20 +89,39 @@ export class Waveform {
             this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.ctx.beginPath();
 
-            const visibleRange = 1.0 / this.zoomFactor; // 1 second
+            const visibleRange = 1.0 / this.zoomFactor;
             const viewOffset = position - visibleRange / 2;
 
             for (let i = 0; i < this.canvasWidth; i++) {
                 const viewIdx = viewOffset + (i / this.canvasWidth) * visibleRange;
 
-                const startIdx = Math.max(0, Math.floor(viewIdx * upscaledWidth));
-                const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), this.postWaveformPoints.length);
-
                 let min = 0, max = 0;
-                for (let j = startIdx; j < endIdx; j++) {
-                    const value = -this.postWaveformPoints[j];
-                    if (value < min) min = value;
-                    if (value > max) max = value;
+
+                if (viewIdx < 0) {
+                    // Sample from pre-origin buffer (negative time)
+                    if (this.preWaveformPoints) {
+                        const absViewIdx = Math.abs(viewIdx);
+                        const startIdx = Math.max(0, Math.floor(absViewIdx * upscaledWidth));
+                        const endIdx = Math.min(Math.floor((absViewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), this.preWaveformPoints.length);
+
+                        for (let j = startIdx; j < endIdx; j++) {
+                            const value = -this.preWaveformPoints[j];
+                            if (value < min) min = value;
+                            if (value > max) max = value;
+                        }
+                    }
+                } else {
+                    // Sample from post-origin buffer (positive time)
+                    if (this.postWaveformPoints) {
+                        const startIdx = Math.max(0, Math.floor(viewIdx * upscaledWidth));
+                        const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), this.postWaveformPoints.length);
+
+                        for (let j = startIdx; j < endIdx; j++) {
+                            const value = -this.postWaveformPoints[j];
+                            if (value < min) min = value;
+                            if (value > max) max = value;
+                        }
+                    }
                 }
 
                 const x = i;
@@ -122,7 +141,6 @@ export class Waveform {
             }
 
             this.ctx.stroke();
-
             this.#updateRuler(position, zoom);
         }
     }

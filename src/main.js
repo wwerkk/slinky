@@ -143,7 +143,7 @@ function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
         }, [channelData.buffer.slice()]);
     }
 
-    waveform.compute(audioBuffer);
+    waveform.compute(bufferPre, audioBuffer);
     requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
@@ -261,7 +261,7 @@ function beginInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(bufferReplaced ? bufferPost : null);
+        waveform.compute(null, bufferReplaced ? bufferPost : null);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
@@ -271,7 +271,7 @@ function handleInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(bufferReplaced ? bufferPost : null);
+        waveform.compute(null, bufferReplaced ? bufferPost : null);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -333,7 +333,7 @@ async function init() {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID, audioContext.sampleRate);
     }
 
-    waveform.compute(bufferPost);
+    waveform.compute(bufferPre, bufferPost);
     requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
