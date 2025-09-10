@@ -140,7 +140,7 @@ function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
         samplerNode.port.postMessage({
             action: 'setBuffer',
             buffer: channelData.buffer
-        }, [channelData.buffer.slice()]);
+        });
     }
 
     waveform.compute(bufferPre, audioBuffer);
@@ -327,7 +327,7 @@ async function init() {
     samplerNode.port.postMessage({
         action: 'setBuffer',
         buffer: dataPost.buffer
-    }, [dataPost.buffer.slice()]);
+    });
 
     if (!waveform) {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID, audioContext.sampleRate);
@@ -352,12 +352,12 @@ function drawAtPosition(mouseX, mouseY) {
             action: 'setBlock',
             offset: sampleIdx,
             samples: new Float32Array([amp]),
-        }, [currentData.buffer.slice()]); // probably not the most optimal when drawing multiple samples in a single drag
+        }); // probably not the most optimal when drawing multiple samples in a single drag
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
         const audioBuffer_ = audioContext.createBuffer(1, idxAbs + audioContext.sampleRate * 15, audioContext.sampleRate);
         audioBuffer_.copyToChannel(currentData, 0);
-        
+
         if (isPre) {
             bufferPre = audioBuffer_;
         } else {
