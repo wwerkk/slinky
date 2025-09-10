@@ -8,7 +8,6 @@ const MAX_ZOOM = 32;
 
 let audioContext;
 let audioBuffer;
-let channelData;
 let samplerNode;
 
 let mediaRecorder;
@@ -119,6 +118,7 @@ init();
 
 function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
     if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
+    const channelData = audioBuffer.getChannelData(0);
     const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
 
     // replace buffer data starting from the current playhead position
@@ -312,8 +312,7 @@ async function init() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (!audioBuffer) {
-            const audioBuffer = generateSine(audioContext.sampleRate);
-            channelData = audioBuffer.getChannelData(0);
+            audioBuffer = generateSine(audioContext.sampleRate);
         }
     }
 
@@ -322,6 +321,8 @@ async function init() {
         samplerNode = new AudioWorkletNode(audioContext, 'sampler-processor');
         samplerNode.connect(audioContext.destination);
     }
+
+    const channelData = audioBuffer.getChannelData(0);
 
     samplerNode.port.postMessage({
         action: 'setBuffer',
@@ -339,7 +340,7 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
-
+    const channelData = audioBuffer.getChannelData(0);
     const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= channelData.length ? 1 : 0;
 
     if (outOfBounds === 0) {
