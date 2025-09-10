@@ -340,11 +340,13 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
-    const currentData = sampleIdx < 0 ? bufferPre.getChannelData(0) : bufferPost.getChannelData(0);
-    const outOfBounds = Math.abs(sampleIdx) >= currentData.length ? 1 : 0;
+    const isPre = sampleIdx < 0;
+    const idxAbs = Math.abs(sampleIdx);
+    const currentData = isPre ? bufferPre.getChannelData(0) : bufferPost.getChannelData(0);
+    const outOfBounds = idxAbs >= currentData.length ? 1 : 0;
 
     if (outOfBounds === 0) {
-        currentData[Math.abs(sampleIdx)] = amp;
+        currentData[idxAbs] = amp;
 
         // samplerNode.port.postMessage({
         //     action: 'setBlock',
@@ -353,7 +355,7 @@ function drawAtPosition(mouseX, mouseY) {
         // }); // probably not the most optimal when drawing multiple samples in a single drag
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
-        const audioBuffer_ = audioContext.createBuffer(1, Math.abs(sampleIdx) + audioContext.sampleRate * 15, audioContext.sampleRate);
+        const audioBuffer_ = audioContext.createBuffer(1, idxAbs + audioContext.sampleRate * 15, audioContext.sampleRate);
         audioBuffer_.copyToChannel(currentData, 0);
         
         if (sampleIdx < 0) {
@@ -362,8 +364,8 @@ function drawAtPosition(mouseX, mouseY) {
             bufferPost = audioBuffer_;
         }
 
-        currentData[sampleIdx] = amp;
-        
+        currentData[idxAbs] = amp;
+
         // samplerNode.port.postMessage({
         //     action: 'setBuffer',
         //     buffer: currentData.slice()
