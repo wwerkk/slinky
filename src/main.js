@@ -348,11 +348,11 @@ function drawAtPosition(mouseX, mouseY) {
     if (outOfBounds === 0) {
         currentData[idxAbs] = amp;
 
-        // samplerNode.port.postMessage({
-        //     action: 'setBlock',
-        //     offset: sampleIdx,
-        //     samples: new Float32Array([amp]),
-        // }); // probably not the most optimal when drawing multiple samples in a single drag
+        samplerNode.port.postMessage({
+            action: 'setBlock',
+            offset: sampleIdx,
+            samples: new Float32Array([amp]),
+        }, [currentData.buffer.slice()]); // probably not the most optimal when drawing multiple samples in a single drag
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
         const audioBuffer_ = audioContext.createBuffer(1, idxAbs + audioContext.sampleRate * 15, audioContext.sampleRate);
@@ -366,10 +366,10 @@ function drawAtPosition(mouseX, mouseY) {
 
         currentData[idxAbs] = amp;
 
-        // samplerNode.port.postMessage({
-        //     action: 'setBuffer',
-        //     buffer: currentData.slice()
-        // }); // update samplerNode buffer
+        samplerNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: currentData.slice()
+        }); // update samplerNode buffer
     }
 
     return outOfBounds;
