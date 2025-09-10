@@ -65,7 +65,7 @@ export class Waveform {
     compute(preBuffer = null, postBuffer = null) {
         if (preBuffer !== null) {
             this.preBuffer = preBuffer;
-            this.preWaveformPoints = this.#generateWaveformPoints(preBuffer).reverse();
+            this.preWaveformPoints = this.#generateWaveformPoints(preBuffer);
         }
 
         if (postBuffer !== null) {
