@@ -308,10 +308,10 @@ async function init() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (!bufferPre) {
-            bufferPre = generateSine(audioContext.sampleRate, 0.25, 1, 0.5, 1);
+            bufferPre = generateSine(audioContext.sampleRate, 1, 1000, 0.5, 1);
         }
         if (!bufferPost) {
-            bufferPost = generateSine(audioContext.sampleRate);
+            bufferPost = generateSine(audioContext.sampleRate, 1, 4000);
         }
     }
 
