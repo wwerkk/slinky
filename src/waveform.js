@@ -3,12 +3,13 @@ export class Waveform {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
+        this.bufferPre = null;
         this.bufferPost = null;
         this.sampleRate = sampleRate;
         this.playheadPosition = 0;
         this.zoomFactor = 1;
         this.upscaleFactor = 1;
-        this.waveformPoints = [];
+        this.postWaveformPoints = [];
         this.#updateCanvasSize();
         window.addEventListener('resize', () => this.#handleResize());
     }
@@ -29,17 +30,15 @@ export class Waveform {
         }
     }
 
-    compute(buffer = null) {
-        if (buffer !== null) {
-            this.bufferPost = buffer;
-        }
 
-        const channelData = this.bufferPost.getChannelData(0); // Use the first channel
+    #generateWaveformPoints(buffer) {
+        const channelData = buffer.getChannelData(0);
         const dataLength = channelData.length;
         const upscaledWidth = dataLength * this.upscaleFactor;
         const samplesPerPixel = dataLength / upscaledWidth;
 
-        this.waveformPoints = [];
+        const waveformPoints = [];
+
         for (let i = 0; i < upscaledWidth; i++) {
             const samplePosition = i * samplesPerPixel;
 
@@ -57,7 +56,21 @@ export class Waveform {
                 sample = lowerSample + (upperSample - lowerSample) * fraction;
             }
 
-            this.waveformPoints.push(sample);
+            waveformPoints.push(sample);
+        }
+
+        return waveformPoints;
+    }
+
+    compute(preBuffer = null, postBuffer = null) {
+        if (preBuffer !== null) {
+            this.preBuffer = preBuffer;
+            this.preWaveformPoints = this.#generateWaveformPoints(preBuffer).reverse();
+        }
+
+        if (postBuffer !== null) {
+            this.postBuffer = postBuffer;
+            this.postWaveformPoints = this.#generateWaveformPoints(postBuffer);
         }
     }
 
@@ -66,7 +79,7 @@ export class Waveform {
         this.zoomFactor = zoom;
         this.#updateCanvasSize();
 
-        if (this.bufferPost && this.waveformPoints.length > 0) {
+        if (this.bufferPost && this.postWaveformPoints.length > 0) {
             const upscaledWidth = this.sampleRate * this.upscaleFactor;
             const amp = this.canvasHeight / 2;
 
@@ -83,11 +96,11 @@ export class Waveform {
                 const viewIdx = viewOffset + (i / this.canvasWidth) * visibleRange;
 
                 const startIdx = Math.max(0, Math.floor(viewIdx * upscaledWidth));
-                const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), this.waveformPoints.length);
+                const endIdx = Math.min(Math.floor((viewIdx + (visibleRange / this.canvasWidth)) * upscaledWidth), this.postWaveformPoints.length);
 
                 let min = 0, max = 0;
                 for (let j = startIdx; j < endIdx; j++) {
-                    const value = -this.waveformPoints[j];
+                    const value = -this.postWaveformPoints[j];
                     if (value < min) min = value;
                     if (value > max) max = value;
                 }
