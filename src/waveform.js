@@ -3,7 +3,7 @@ export class Waveform {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.playhead = document.getElementById(playheadId);
-        this.currentBuffer = null;
+        this.bufferPost = null;
         this.sampleRate = sampleRate;
         this.playheadPosition = 0;
         this.zoomFactor = 1;
@@ -22,7 +22,7 @@ export class Waveform {
     }
 
     #handleResize() {
-        if (this.currentBuffer) {
+        if (this.bufferPost) {
             this.plot(this.playheadPosition, this.zoomFactor);
         } else {
             this.#updateCanvasSize();
@@ -31,10 +31,10 @@ export class Waveform {
 
     compute(buffer = null) {
         if (buffer !== null) {
-            this.currentBuffer = buffer;
+            this.bufferPost = buffer;
         }
 
-        const channelData = this.currentBuffer.getChannelData(0); // Use the first channel
+        const channelData = this.bufferPost.getChannelData(0); // Use the first channel
         const dataLength = channelData.length;
         const upscaledWidth = dataLength * this.upscaleFactor;
         const samplesPerPixel = dataLength / upscaledWidth;
@@ -66,7 +66,7 @@ export class Waveform {
         this.zoomFactor = zoom;
         this.#updateCanvasSize();
 
-        if (this.currentBuffer && this.waveformPoints.length > 0) {
+        if (this.bufferPost && this.waveformPoints.length > 0) {
             const upscaledWidth = this.sampleRate * this.upscaleFactor;
             const amp = this.canvasHeight / 2;
 
@@ -115,7 +115,7 @@ export class Waveform {
     }
 
     #updateRuler(position, zoom) {
-        if (!this.currentBuffer) return;
+        if (!this.bufferPost) return;
 
         const rulerElement = document.getElementById('ruler');
         if (!rulerElement) return;
