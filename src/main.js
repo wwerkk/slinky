@@ -292,14 +292,14 @@ function handleInteraction(x, y) {
 }
 
 async function init() {
-    function generateSine(sampleRate = 44100, duration = 1, frequency = 0.5, amplitude = 0.5) {
+    function generateSine(sampleRate = 44100, duration = 1, frequency = 0.5, amplitude = 0.5, phase = 0) {
         const length = sampleRate * duration;
 
         const audioBuffer = audioContext.createBuffer(1, length, sampleRate);
         const channelData = audioBuffer.getChannelData(0);
 
         for (let i = 0; i < length; i++) {
-            channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * amplitude;
+            channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate + phase * Math.PI) * amplitude;
         }
 
         return audioBuffer;
