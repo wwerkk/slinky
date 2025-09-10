@@ -325,8 +325,9 @@ async function init() {
     const dataPost = bufferPost.getChannelData(0);
 
     samplerNode.port.postMessage({
-        action: 'setBuffer',
-        buffer: dataPost.buffer
+        action: 'setBuffers',
+        preBuffer: dataPre.buffer,
+        postBuffer: dataPost.buffer
     });
 
     if (!waveform) {
@@ -352,6 +353,7 @@ function drawAtPosition(mouseX, mouseY) {
             action: 'setBlock',
             offset: sampleIdx,
             samples: new Float32Array([amp]),
+            isPre: isPre
         }); // probably not the most optimal when drawing multiple samples in a single drag
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
@@ -368,7 +370,8 @@ function drawAtPosition(mouseX, mouseY) {
 
         samplerNode.port.postMessage({
             action: 'setBuffer',
-            buffer: currentData.slice()
+            buffer: currentData.slice(),
+            isPre: isPre
         }); // update samplerNode buffer
     }
 

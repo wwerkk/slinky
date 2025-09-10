@@ -2,6 +2,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this.bufferPre = null;
+        this.bufferPost = null;
         this.targetPosition = 0;
         this.currentPosition = 0;
         this.isPlaying = false;
@@ -20,18 +21,39 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
         if (action === 'setPosition') {
             const { position } = event.data;
-            if (this.bufferPre) {
+            if (this.bufferPost) {
                 this.targetPosition = position * sampleRate;
                 this.isPlaying = true;
             }
         } else if (action === 'setBlock') {
-            const { offset, samples } = event.data;
-            if (this.bufferPre && offset >= 0 && offset + samples.length <= this.bufferPre.length) {
+            const { offset, samples, isPre } = event.data;
+            if (this.bufferPost && offset >= 0 && offset + samples.length <= this.bufferPost.length) {
+                this.bufferPost.set(samples, offset);
+            }
+            if (isPre && this.bufferPre && offset >= 0 && offset + samples.length <= this.bufferPre.length) {
                 this.bufferPre.set(samples, offset);
             }
         } else if (action === 'setBuffer') {
-            const { buffer } = event.data;
-            this.bufferPre = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
+            const { buffer, isPre } = event.data;
+            if (isPre) {
+                this.bufferPre = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
+            } else {
+                this.bufferPost = buffer instanceof ArrayBuffer ? new Float32Array(buffer) : buffer;
+            }
+            this.targetPosition = 0;
+            this.currentPosition = 0;
+            this.historyIndex = 0;
+            this.historyCount = 0;
+            this.runningSum = 0;
+            this.isPlaying = false;
+        } else if (action === 'setBuffers') {
+            const { preBuffer, postBuffer } = event.data;
+            if (preBuffer) {
+                this.bufferPre = preBuffer instanceof ArrayBuffer ? new Float32Array(preBuffer) : preBuffer;
+            }
+            if (postBuffer) {
+                this.bufferPost = postBuffer instanceof ArrayBuffer ? new Float32Array(postBuffer) : postBuffer;
+            }
             this.targetPosition = 0;
             this.currentPosition = 0;
             this.historyIndex = 0;
@@ -45,17 +67,17 @@ class SamplerProcessor extends AudioWorkletProcessor {
         const index = Math.floor(position);
         const fraction = position - index;
 
-        if (index < 1 || index >= this.bufferPre.length - 2) {
-            if (index >= 0 && index < this.bufferPre.length - 1) {
-                return this.bufferPre[index] * (1 - fraction) + this.bufferPre[index + 1] * fraction;
+        if (index < 1 || index >= this.bufferPost.length - 2) {
+            if (index >= 0 && index < this.bufferPost.length - 1) {
+                return this.bufferPost[index] * (1 - fraction) + this.bufferPost[index + 1] * fraction;
             }
-            return index >= 0 && index < this.bufferPre.length ? this.bufferPre[index] : 0;
+            return index >= 0 && index < this.bufferPost.length ? this.bufferPost[index] : 0;
         }
 
-        const y0 = this.bufferPre[index - 1];
-        const y1 = this.bufferPre[index];
-        const y2 = this.bufferPre[index + 1];
-        const y3 = this.bufferPre[index + 2];
+        const y0 = this.bufferPost[index - 1];
+        const y1 = this.bufferPost[index];
+        const y2 = this.bufferPost[index + 1];
+        const y3 = this.bufferPost[index + 2];
 
         const t = fraction;
         const a = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
@@ -73,7 +95,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
             output[channel].fill(0);
         }
 
-        if (!this.bufferPre || !this.isPlaying) return true;
+        if (!this.bufferPost || !this.isPlaying) return true;
 
         for (let i = 0; i < output[0].length; i++) {
             if (this.historyCount === this.historySize) {
@@ -89,7 +111,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
             }
             this.currentPosition = this.runningSum / this.historyCount;
             this.currentPosition = this.currentPosition < 0 ? 0 :
-                this.currentPosition > this.bufferPre.length - 1 ? this.bufferPre.length - 1
+                this.currentPosition > this.bufferPost.length - 1 ? this.bufferPost.length - 1
                     : this.currentPosition;
 
             let sample = this.hermiteSpline(this.currentPosition);
