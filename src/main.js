@@ -117,8 +117,8 @@ init();
 
 function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
     if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-    const channelData = audioBuffer.getChannelData(0);
-    const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
+    let channelData = audioBuffer.getChannelData(0);
+    let channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
 
     // replace buffer data starting from the current playhead position
     const offset = Math.floor(playheadPosition * audioContext.sampleRate);
