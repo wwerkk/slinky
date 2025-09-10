@@ -7,7 +7,7 @@ const MIN_ZOOM = 1 / 32;
 const MAX_ZOOM = 32;
 
 let audioContext;
-let audioBuffer = null;
+let audioBuffer;
 let samplerNode;
 
 let mediaRecorder;
