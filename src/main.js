@@ -59,7 +59,7 @@ positionSlider.addEventListener('input', (event) => {
         position: playheadPosition
     });
 
-        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 });
 
 const zoomSlider = document.getElementById('zoomSlider');
