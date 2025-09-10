@@ -63,21 +63,21 @@ class SamplerProcessor extends AudioWorkletProcessor {
         }
     }
 
-    hermiteSpline(position) {
+    hermiteSpline(position, currentBuffer) {
         const index = Math.floor(position);
         const fraction = position - index;
 
-        if (index < 1 || index >= this.bufferPost.length - 2) {
-            if (index >= 0 && index < this.bufferPost.length - 1) {
-                return this.bufferPost[index] * (1 - fraction) + this.bufferPost[index + 1] * fraction;
+        if (index < 1 || index >= currentBuffer.length - 2) {
+            if (index >= 0 && index < currentBuffer.length - 1) {
+                return currentBuffer[index] * (1 - fraction) + currentBuffer[index + 1] * fraction;
             }
-            return index >= 0 && index < this.bufferPost.length ? this.bufferPost[index] : 0;
+            return index >= 0 && index < currentBuffer.length ? currentBuffer[index] : 0;
         }
 
-        const y0 = this.bufferPost[index - 1];
-        const y1 = this.bufferPost[index];
-        const y2 = this.bufferPost[index + 1];
-        const y3 = this.bufferPost[index + 2];
+        const y0 = currentBuffer[index - 1];
+        const y1 = currentBuffer[index];
+        const y2 = currentBuffer[index + 1];
+        const y3 = currentBuffer[index + 2];
 
         const t = fraction;
         const a = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
@@ -119,7 +119,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
             const absPosition = Math.abs(this.currentPosition);
 
-            let sample = this.hermiteSpline(absPosition);
+            let sample = this.hermiteSpline(absPosition, currentBuffer);
 
             for (let channel = 0; channel < channelCount; channel++) {
                 output[channel][i] = sample;
