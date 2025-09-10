@@ -292,7 +292,7 @@ function handleInteraction(x, y) {
 }
 
 async function init() {
-    function generateSine(sampleRate = 44100, duration = 1, frequency = 441, amplitude = 0.5) {
+    function generateSine(sampleRate = 44100, duration = 1, frequency = 0.5, amplitude = 0.5) {
         const length = sampleRate * duration;
 
         const audioBuffer = audioContext.createBuffer(1, length, sampleRate);
