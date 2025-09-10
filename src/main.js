@@ -340,11 +340,11 @@ async function init() {
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
-    const channelData = bufferPost.getChannelData(0);
-    const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= channelData.length ? 1 : 0;
+    const postData = bufferPost.getChannelData(0);
+    const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= postData.length ? 1 : 0;
 
     if (outOfBounds === 0) {
-        channelData[sampleIdx] = amp;
+        postData[sampleIdx] = amp;
 
         samplerNode.port.postMessage({
             action: 'setBlock',
@@ -354,15 +354,15 @@ function drawAtPosition(mouseX, mouseY) {
     } else if (outOfBounds === 1) {
         // add 15s margin to the right of the added sample
         const audioBuffer_ = audioContext.createBuffer(1, sampleIdx + audioContext.sampleRate * 15, audioContext.sampleRate);
-        audioBuffer_.copyToChannel(channelData, 0);
+        audioBuffer_.copyToChannel(postData, 0);
         bufferPost = audioBuffer_;
 
-        channelData = bufferPost.getChannelData(0);
+        postData = bufferPost.getChannelData(0);
 
-        channelData[sampleIdx] = amp;
+        postData[sampleIdx] = amp;
         samplerNode.port.postMessage({
             action: 'setBuffer',
-            buffer: channelData.slice()
+            buffer: postData.slice()
         }); // update samplerNode buffer
     }
 
