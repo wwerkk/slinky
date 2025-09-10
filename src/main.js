@@ -7,11 +7,8 @@ const MIN_ZOOM = 1 / 32;
 const MAX_ZOOM = 32;
 
 let audioContext;
-let audioBuffer;
-let audioBuffers = {
-    preOrigin: null,   // Audio data for time < 0 seconds (left of origin)
-    postOrigin: null   // Audio data for time >= 0 seconds (right of origin, includes origin)
-};
+let bufferPre;   // Audio data for time < 0 seconds (left of origin)
+let bufferPost;   // Audio data for time >= 0 seconds (right of origin)
 let samplerNode;
 
 let mediaRecorder;
@@ -164,7 +161,7 @@ async function handleDrop(event) {
         }
         const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        updateBufferFromOffset(audioBuffer, decodedBuffer, playheadPosition);
+        updateBufferFromOffset(bufferPost, decodedBuffer, playheadPosition);
     };
 
     event.preventDefault();
@@ -205,7 +202,7 @@ async function toggleRecording() {
 
                 try {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    updateBufferFromOffset(audioBuffer, recordedBuffer, playheadPosition);
+                    updateBufferFromOffset(bufferPost, recordedBuffer, playheadPosition);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -264,7 +261,7 @@ function beginInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(bufferReplaced ? audioBuffer : null);
+        waveform.compute(bufferReplaced ? bufferPost : null);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
@@ -274,7 +271,7 @@ function handleInteraction(x, y) {
     if (drawMode) {
         const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute(bufferReplaced ? audioBuffer : null);
+        waveform.compute(bufferReplaced ? bufferPost : null);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -310,8 +307,11 @@ async function init() {
 
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (!audioBuffer) {
-            audioBuffer = generateSine(audioContext.sampleRate);
+        if (!bufferPre) {
+            bufferPre = generateSine(audioContext.sampleRate);
+        }
+        if (!bufferPost) {
+            bufferPost = generateSine(audioContext.sampleRate);
         }
     }
 
@@ -321,25 +321,26 @@ async function init() {
         samplerNode.connect(audioContext.destination);
     }
 
-    const channelData = audioBuffer.getChannelData(0);
+    const dataPre = bufferPre.getChannelData(0);
+    const dataPost = bufferPost.getChannelData(0);
 
     samplerNode.port.postMessage({
         action: 'setBuffer',
-        buffer: channelData.buffer
-    }, [channelData.buffer.slice()]);
+        buffer: dataPost.buffer
+    }, [dataPost.buffer.slice()]);
 
     if (!waveform) {
         waveform = new Waveform(WAVEFORM_CANVAS_ID, PLAYHEAD_ID, audioContext.sampleRate);
     }
 
-    waveform.compute(audioBuffer);
+    waveform.compute(bufferPost);
     requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
 }
 
 function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
-    const channelData = audioBuffer.getChannelData(0);
+    const channelData = bufferPost.getChannelData(0);
     const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= channelData.length ? 1 : 0;
 
     if (outOfBounds === 0) {
@@ -354,9 +355,9 @@ function drawAtPosition(mouseX, mouseY) {
         // add 15s margin to the right of the added sample
         const audioBuffer_ = audioContext.createBuffer(1, sampleIdx + audioContext.sampleRate * 15, audioContext.sampleRate);
         audioBuffer_.copyToChannel(channelData, 0);
-        audioBuffer = audioBuffer_;
+        bufferPost = audioBuffer_;
 
-        channelData = audioBuffer.getChannelData(0);
+        channelData = bufferPost.getChannelData(0);
 
         channelData[sampleIdx] = amp;
         samplerNode.port.postMessage({
