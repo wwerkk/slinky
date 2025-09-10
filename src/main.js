@@ -8,6 +8,10 @@ const MAX_ZOOM = 32;
 
 let audioContext;
 let audioBuffer;
+let audioBuffers = {
+    preOrigin: null,   // Audio data for time < 0 seconds (left of origin)
+    postOrigin: null   // Audio data for time >= 0 seconds (right of origin, includes origin)
+};
 let samplerNode;
 
 let mediaRecorder;
