@@ -383,7 +383,7 @@ function mouseXtoSample(mouseX) {
     let position = -0.5 + mouseX / canvasWidth; // translated to the middle and normalised
 
     const idx = (playheadPosition + position / zoomFactor) * audioContext.sampleRate;
-    return Math.floor(idx);
+    return Math.floor(idx); // FIXME: handle negative values correctly
 }
 
 function mouseYtoAmp(mouseY) {
