@@ -27,11 +27,10 @@ class SamplerProcessor extends AudioWorkletProcessor {
             }
         } else if (action === 'setBlock') {
             const { offset, samples, isPre } = event.data;
-            if (this.bufferPost && offset >= 0 && offset + samples.length <= this.bufferPost.length) {
+            if (isPre) {
+                this.bufferPre.set(samples, Math.abs(offset));
+            } else {
                 this.bufferPost.set(samples, offset);
-            }
-            if (isPre && this.bufferPre && offset >= 0 && offset + samples.length <= this.bufferPre.length) {
-                this.bufferPre.set(samples, offset);
             }
         } else if (action === 'setBuffer') {
             const { buffer, isPre } = event.data;
