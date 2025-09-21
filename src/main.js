@@ -117,6 +117,37 @@ document.getElementById(WAVEFORM_CANVAS_ID).addEventListener('drag', (event) => 
 
 init();
 
+function updateBufferFromOffset(audioBuffer, audioBuffer_, playheadPosition) {
+    if (audioBuffer_.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
+    const channelData_ = audioBuffer_.getChannelData(0); // truncate to first channel for now
+
+    // replace buffer data starting from the current playhead position
+    const offset = Math.floor(playheadPosition * audioContext.sampleRate);
+    if (offset < 0) {
+        console.warn('Negative playhead position is not supported for now, resetting to 0.');
+        playheadPosition = 0;
+    }
+    if (audioBuffer_.length + offset <= audioBuffer.length) {
+        audioBuffer.copyToChannel(channelData_, 0, offset);
+    } else if (audioBuffer_.length + offset > audioBuffer.length) {
+        const summedBuffer = audioContext.createBuffer(1, offset + audioBuffer_.length, audioContext.sampleRate);
+        summedBuffer.copyToChannel(channelData, 0, 0);
+        summedBuffer.copyToChannel(channelData_, 0, offset);
+        audioBuffer = summedBuffer;
+        channelData = audioBuffer.getChannelData(0);
+    }
+
+    if (samplerNode) {
+        samplerNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: channelData.buffer
+        }, [channelData.buffer.slice()]);
+    }
+
+    waveform.compute(audioBuffer);
+    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+}
+
 async function handleDrop(event) {
     const loadAudioFile = async (file) => {
         const arrayBuffer = await new Promise((resolve, reject) => {
@@ -129,23 +160,9 @@ async function handleDrop(event) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        if (audioBuffer.numberOfChannels > 1) console.warn('Audio file has more than one channel, using the first channel only.');
-        channelData = audioBuffer.getChannelData(0); // truncate to first channel for now
+        const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        if (samplerNode) {
-            samplerNode.port.postMessage({
-                action: 'setBuffer',
-                buffer: channelData.buffer
-            }, [channelData.buffer.slice()]);
-        }
-
-        playheadPosition = 0;
-        positionSlider.value = playheadPosition;
-        positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
-
-        waveform.compute(audioBuffer);
-        requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+        updateBufferFromOffset(audioBuffer, decodedBuffer, playheadPosition);
     };
 
     event.preventDefault();
@@ -186,22 +203,7 @@ async function toggleRecording() {
 
                 try {
                     const recordedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    audioBuffer = recordedBuffer;
-                    channelData = audioBuffer.getChannelData(0);
-
-                    if (samplerNode) {
-                        samplerNode.port.postMessage({
-                            action: 'setBuffer',
-                            buffer: channelData.buffer
-                        }, [channelData.buffer.slice()]);
-                    }
-
-                    playheadPosition = 0;
-                    positionSlider.value = playheadPosition;
-                    positionSliderValue.textContent = playheadPosition.toFixed(2) + "s";
-
-                    waveform.compute(audioBuffer);
-                    requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
+                    updateBufferFromOffset(audioBuffer, recordedBuffer, playheadPosition);
                 } catch (error) {
                     console.error('Error decoding recorded audio:', error);
                 }
@@ -258,9 +260,9 @@ function beginInteraction(x, y) {
     }
     isInteracting = true;
     if (drawMode) {
-        drawAtPosition(x, y);
+        const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute();
+        waveform.compute(bufferReplaced ? audioBuffer : null);
         requestAnimationFrame(() => waveform.plot(playheadPosition, zoomFactor));
     }
     lastMouseX = x;
@@ -268,9 +270,9 @@ function beginInteraction(x, y) {
 
 function handleInteraction(x, y) {
     if (drawMode) {
-        drawAtPosition(x, y);
+        const bufferReplaced = drawAtPosition(x, y);
 
-        waveform.compute();
+        waveform.compute(bufferReplaced ? audioBuffer : null);
     } else {
         const last = Math.max(0, Math.min(1, lastMouseX / waveform.canvasWidth));
         const current = Math.max(0, Math.min(1, x / waveform.canvasWidth));
@@ -292,7 +294,7 @@ function handleInteraction(x, y) {
 
 async function init() {
     function generateSine(sampleRate = 44100) {
-        const duration = 1; // seconds
+        const duration = 2; // seconds
         const frequency = 441; // Hz
         const amplitude = 0.5;
         const length = sampleRate * duration;
@@ -338,17 +340,32 @@ function drawAtPosition(mouseX, mouseY) {
     const sampleIdx = mouseXtoSample(mouseX);
     const amp = mouseYtoAmp(mouseY);
 
-    const channel = audioBuffer.getChannelData(0);
+    const outOfBounds = sampleIdx < 0 ? -1 : sampleIdx >= channelData.length ? 1 : 0;
 
-    if (sampleIdx >= 0 && sampleIdx < channel.length) {
-        channel[sampleIdx] = amp;
+    if (outOfBounds === 0) {
+        channelData[sampleIdx] = amp;
 
         samplerNode.port.postMessage({
             action: 'setBlock',
             offset: sampleIdx,
             samples: new Float32Array([amp]),
         }); // probably not the most optimal when drawing multiple samples in a single drag
+    } else if (outOfBounds === 1) {
+        // add 15s margin to the right of the added sample
+        const audioBuffer_ = audioContext.createBuffer(1, sampleIdx + audioContext.sampleRate * 15, audioContext.sampleRate);
+        audioBuffer_.copyToChannel(channelData, 0);
+        audioBuffer = audioBuffer_;
+
+        channelData = audioBuffer.getChannelData(0);
+
+        channelData[sampleIdx] = amp;
+        samplerNode.port.postMessage({
+            action: 'setBuffer',
+            buffer: channelData.slice()
+        }); // update samplerNode buffer
     }
+
+    return outOfBounds;
 }
 
 function mouseXtoSample(mouseX) {
